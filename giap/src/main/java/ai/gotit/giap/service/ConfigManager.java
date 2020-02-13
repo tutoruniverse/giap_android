@@ -1,16 +1,16 @@
 package ai.gotit.giap.service;
 
-public class Configuration {
-    private static Configuration instance = null;
+public class ConfigManager {
+    private static ConfigManager instance = null;
     private String serverUrl = null;
     private String token = null;
 
-    private Configuration() {
+    private ConfigManager() {
     }
 
-    public static Configuration getInstance() {
+    public static ConfigManager getInstance() {
         if (instance == null) {
-            instance = new Configuration();
+            instance = new ConfigManager();
         }
         return instance;
     }

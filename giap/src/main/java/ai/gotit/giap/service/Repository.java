@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 import ai.gotit.giap.constant.CommonConstant;
-import ai.gotit.giap.exception.GIAPException;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
 
 public class Repository {
@@ -20,7 +19,7 @@ public class Repository {
         );
     }
 
-    public static Repository initialize(Activity activity) throws GIAPException {
+    public static Repository initialize(Activity activity) {
         if (instance != null) {
             throw new GIAPInstanceExistsException();
         }

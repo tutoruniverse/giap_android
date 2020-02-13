@@ -10,11 +10,13 @@ import android.widget.Button;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import ai.gotit.giap.GIAP;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 public class MainActivity extends AppCompatActivity {
+    private Integer count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,10 +34,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        GIAP giap = GIAP.initialize("http://hello", "123", MainActivity.this);
+
         Button btn = findViewById(R.id.click_me_btn);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 showAlert("Clicked");
             }
         });
