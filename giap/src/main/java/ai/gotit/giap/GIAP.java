@@ -5,6 +5,7 @@ import android.app.Activity;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
 import ai.gotit.giap.service.ConfigManager;
 import ai.gotit.giap.service.Repository;
+import ai.gotit.giap.service.TaskManager;
 
 public class GIAP {
 
@@ -27,6 +28,8 @@ public class GIAP {
         configManager.setToken(token);
 
         Repository.initialize(activity);
+
+        TaskManager.initialize();
 
         instance = new GIAP();
         return instance;

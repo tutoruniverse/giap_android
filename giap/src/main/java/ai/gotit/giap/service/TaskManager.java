@@ -6,6 +6,10 @@ import org.json.JSONObject;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import ai.gotit.giap.constant.CommonProps;
 import ai.gotit.giap.constant.RepositoryKey;
@@ -19,6 +23,10 @@ import ai.gotit.giap.util.Logger;
 public class TaskManager {
     private static TaskManager instance = null;
     private Queue<Task> taskQueue = new LinkedList<>();
+    private Boolean flushing = false;
+    private Boolean scheduled = false;
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(100);
+    private ScheduledFuture<?> scheduledJobHandler;
 
     private TaskManager() {
     }
@@ -30,6 +38,7 @@ public class TaskManager {
 
         instance = new TaskManager();
         instance.loadStoredTasks();
+        instance.schedule();
         return instance;
     }
 
@@ -114,4 +123,31 @@ public class TaskManager {
         taskQueue.add(task);
     }
 
+    private final Runnable flush = new Runnable() {
+        public void run() {
+            if (flushing) return;
+            if (taskQueue.size() == 0) return;
+            flushing = true;
+            //    TODO
+        }
+    };
+
+    public void schedule() {
+        if (scheduled) {
+            Logger.warn("Scheduler is started. Call stop() or forceStop() before starting again.");
+            return;
+        }
+        scheduled = true;
+        long tasksFlushingInterval = ConfigManager.getInstance().getTasksFlushingInterval();
+        scheduledJobHandler = scheduler.scheduleAtFixedRate(
+                flush,
+                tasksFlushingInterval,
+                tasksFlushingInterval,
+                TimeUnit.SECONDS
+        );
+    }
+
+    public void stop() {
+        scheduledJobHandler.
+    }
 }

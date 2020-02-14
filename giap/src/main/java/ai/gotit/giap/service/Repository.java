@@ -13,10 +13,9 @@ public class Repository {
     private SharedPreferences pref;
 
     private Repository(Activity activity) {
-        pref = activity.getSharedPreferences(
-                CommonConstant.SHARED_PREFERENCES_NAME,
-                Context.MODE_PRIVATE
-        );
+        // We use token in storage's name to prevent different projects using others's data
+        String sharedPreferencesName = CommonConstant.SHARED_PREFERENCES_PREFIX + ConfigManager.getInstance().getToken();
+        pref = activity.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE);
     }
 
     public static Repository initialize(Activity activity) {
