@@ -12,18 +12,20 @@ public class Repository {
     private static Repository instance = null;
     private SharedPreferences pref;
 
-    private Repository(Activity activity) {
+    private Repository(Activity context) {
         // We use token in storage's name to prevent different projects using others's data
-        String sharedPreferencesName = CommonConstant.SHARED_PREFERENCES_PREFIX + ConfigManager.getInstance().getToken();
-        pref = activity.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE);
+        String token = ConfigManager.getInstance().getToken();
+        String sharedPreferencesName = CommonConstant.SHARED_PREFERENCES_PREFIX + token;
+        pref = context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE);
     }
 
-    public static Repository initialize(Activity activity) {
+    public static Repository initialize() {
         if (instance != null) {
             throw new GIAPInstanceExistsException();
         }
 
-        instance = new Repository(activity);
+        Activity context = ConfigManager.getInstance().getContext();
+        instance = new Repository(context);
         return instance;
     }
 

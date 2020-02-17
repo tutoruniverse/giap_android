@@ -1,5 +1,9 @@
 package ai.gotit.giap.service;
 
+import com.android.volley.NoConnectionError;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -111,6 +115,8 @@ public class TaskManager {
         }
         Task task = new Task(TaskType.ALIAS, json);
         taskQueue.add(task);
+        // TODO: aware of multi-thread -> new events still have chance to use old distinctId
+        IdentityManager.getInstance().updateDistinctId(userId);
     }
 
     public void createIdentifyTask(String userId) throws GIAPJsonException {
@@ -125,6 +131,8 @@ public class TaskManager {
         }
         Task task = new Task(TaskType.IDENTIFY, json);
         taskQueue.add(task);
+        // TODO: aware of multi-thread -> new events still have chance to use old distinctId
+        IdentityManager.getInstance().updateDistinctId(userId);
     }
 
     private List<JSONObject> dequeueEvents() {
@@ -133,24 +141,33 @@ public class TaskManager {
     }
 
     private List<JSONObject> dequeueEvents(List<JSONObject> previousList) {
-        if (taskQueue.size() == 0) {
+        if (processingQueue.size() == 0) {
             Logger.log("DEQUEUE: nothing left to dequeue");
             return previousList;
         }
-        Task topTask = taskQueue.peek();
+        Task topTask = processingQueue.peek();
         if (!topTask.getType().equals(TaskType.EVENT)) {
             Logger.log("DEQUEUE: top item is not event, stop dequeue");
             return previousList;
         }
-        processingQueue.add(taskQueue.poll());
+        topTask.setProcessing(true);
+        processingQueue.poll();
         previousList.add(topTask.getData());
         Logger.log("DEQUEUE: added 1 event to the list");
         return dequeueEvents(previousList);
     }
 
     private void cleanUpProcessingTasks() {
-        processingQueue.clear();
+        while (taskQueue.size() > 0 && taskQueue.peek().getProcessing()) {
+            taskQueue.poll();
+        }
         Logger.log("Cleaned up finished tasks!");
+    }
+
+    private void finishFlushing() {
+        processingQueue.clear();
+        flushing = false;
+        Logger.log("Flushing finished!");
     }
 
     private final Runnable flush = new Runnable() {
@@ -166,7 +183,10 @@ public class TaskManager {
             flushing = true;
             Logger.log("INCOMING FLUSHING: New flushing has started!");
 
-            Task topTask = taskQueue.peek();
+            processingQueue.clear();
+            processingQueue.addAll(taskQueue);
+
+            Task topTask = processingQueue.peek();
             switch (topTask.getType()) {
                 case TaskType.EVENT: {
                     Logger.log("FLUSHING: trying to flush event tasks");
@@ -176,14 +196,27 @@ public class TaskManager {
                     if (eventBatchSize > 0) {
                         Logger.log("FLUSHING: dequeue " + eventBatchSize + " events to the batch");
                         JSONArray bodyData = new JSONArray(eventBatch);
-                        boolean response = NetworkManager.track(bodyData);
-                        Logger.log("FLUSHING: track() returned " + response);
-                        // TODO: handle response
-                        if (response == true) {
-                            cleanUpProcessingTasks();
-                        } else {
-                            // Only retry (not call cleanUpProcessingTasks) if receive no response or network error
-                        }
+                        NetworkManager.getInstance().track(bodyData, new Response.Listener<JSONObject>() {
+                            @Override
+                            public void onResponse(JSONObject response) {
+                                Logger.log("FLUSHING: track() returned " + response.toString());
+                                cleanUpProcessingTasks();
+                                finishFlushing();
+                            }
+                        }, new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError e) {
+                                // TODO: Only retry (not call cleanUpProcessingTasks) if receive no response or network error
+                                Logger.error(e);
+                                if (e instanceof NoConnectionError) {
+                                    Logger.log("FLUSHING: network error, retry!");
+                                } else {
+                                    // TODO: If code 5XX (Server error, also retry)
+                                    cleanUpProcessingTasks();
+                                }
+                                finishFlushing();
+                            }
+                        });
                     } else {
                         Logger.warn("FLUSHING: empty event batch! (Should not happen)");
                     }
@@ -192,13 +225,27 @@ public class TaskManager {
 
                 case TaskType.ALIAS: {
                     Logger.log("FLUSHING: try to flush alias task");
-                    boolean response = NetworkManager.alias(topTask.getData());
-                    // TODO: handle response
-                    if (response == true) {
-                        cleanUpProcessingTasks();
-                    } else {
-                        // Only retry (not call cleanUpProcessingTasks) if receive no response or network error
-                    }
+                    NetworkManager.getInstance().alias(topTask.getData(), new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Logger.log("FLUSHING: alias() returned " + response.toString());
+                            cleanUpProcessingTasks();
+                            finishFlushing();
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError e) {
+                            // TODO: Only retry (not call cleanUpProcessingTasks) if receive no response or network error
+                            Logger.error(e);
+                            if (e instanceof NoConnectionError) {
+                                Logger.log("FLUSHING: network error, retry!");
+                            } else {
+                                // TODO: If code 5XX (Server error, also retry)
+                                cleanUpProcessingTasks();
+                            }
+                            finishFlushing();
+                        }
+                    });
                     break;
                 }
 
@@ -207,24 +254,33 @@ public class TaskManager {
                     try {
                         String userId = topTask.getData().getString(CommonProps.USER_ID);
                         String currentDistinctId = topTask.getData().getString(CommonProps.CURRENT_DISTINCT_ID);
-                        boolean response = NetworkManager.identify(userId, currentDistinctId);
-                        // TODO: handle response
-                        if (response == true) {
-                            cleanUpProcessingTasks();
-                        } else {
-                            // Only retry (not call cleanUpProcessingTasks) if receive no response or network error
-                        }
+                        NetworkManager.getInstance().identify(userId, currentDistinctId, new Response.Listener<JSONObject>() {
+                            @Override
+                            public void onResponse(JSONObject response) {
+                                Logger.log("FLUSHING: identify() returned " + response.toString());
+                                cleanUpProcessingTasks();
+                                finishFlushing();
+                            }
+                        }, new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError e) {
+                                // TODO: Only retry (not call cleanUpProcessingTasks) if receive no response or network error
+                                Logger.error(e);
+                                if (e instanceof NoConnectionError) {
+                                    Logger.log("FLUSHING: network error, retry!");
+                                } else {
+                                    // TODO: If code 5XX (Server error, also retry)
+                                    cleanUpProcessingTasks();
+                                }
+                                finishFlushing();
+                            }
+                        });
                     } catch (JSONException e) {
                         Logger.error(e);
                     }
                     break;
                 }
             }
-
-            flushing = false;
-            Logger.log("Flushing finished!");
-            //    If success, remove processing tasks
-            //    Then set flushing = false
         }
     };
 

@@ -1,9 +1,12 @@
 package ai.gotit.giap.service;
 
+import android.app.Activity;
+
 import ai.gotit.giap.constant.DefaultConfig;
 
 public class ConfigManager {
     private static ConfigManager instance = null;
+    private Activity context = null;
     private String serverUrl = null;
     private String token = null;
     private long tasksFlushingInterval = DefaultConfig.TASKS_FLUSHING_INTERVAL;
@@ -17,6 +20,14 @@ public class ConfigManager {
             instance = new ConfigManager();
         }
         return instance;
+    }
+
+    public Activity getContext() {
+        return context;
+    }
+
+    public void setContext(Activity context) {
+        this.context = context;
     }
 
     public String getServerUrl() {

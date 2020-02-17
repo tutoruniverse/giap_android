@@ -9,6 +9,7 @@ import ai.gotit.giap.constant.TaskProps;
 public class Task implements Serializable {
     private String type;
     private JSONObject data = null;
+    private Boolean processing = false;
 
     public Task(String type) {
         this.type = type;
@@ -34,6 +35,14 @@ public class Task implements Serializable {
 
     public void setData(JSONObject data) {
         this.data = data;
+    }
+
+    public Boolean getProcessing() {
+        return processing;
+    }
+
+    public void setProcessing(Boolean processing) {
+        this.processing = processing;
     }
 
     public JSONObject serialize() throws JSONException {

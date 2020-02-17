@@ -2,6 +2,7 @@ package ai.gotit.giap_android;
 
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,15 +35,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        final GIAP giap = GIAP.initialize("http://hello", "123", MainActivity.this);
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
+        final GIAP giap = GIAP.initialize(
+                "https://5e4a53406eafb7001488c319.mockapi.io",
+                "123",
+                MainActivity.this
+        );
 
         Button btn = findViewById(R.id.click_me_btn);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //showAlert("Clicked");
-                giap.track("Hello event");
-                giap.track("Hello event");
                 giap.track("Hello event");
             }
         });
