@@ -1,15 +1,29 @@
 package ai.gotit.giap.service;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import ai.gotit.giap.util.Logger;
+
 public class NetworkManager {
-    public void track() {
+    public static boolean track(JSONArray bodyData) {
+        //    TODO
+        Logger.log("track(): " + bodyData.toString());
+        return true;
     }
 
-    public void alias() {
+    public static boolean alias(JSONObject bodyData) {
+        //    TODO
+        Logger.log("alias(): " + bodyData.toString());
+        return true;
     }
 
-    public void identify() {
+    public static boolean identify(String userId, String currentDistinctId) {
+        //    TODO
+        Logger.log("identity(): " + userId + " - " + currentDistinctId);
+        return true;
     }
 
-    public void updateProfile() {
+    public static void updateProfile() {
     }
 }

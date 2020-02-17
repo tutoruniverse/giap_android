@@ -34,14 +34,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        GIAP giap = GIAP.initialize("http://hello", "123", MainActivity.this);
+        final GIAP giap = GIAP.initialize("http://hello", "123", MainActivity.this);
 
         Button btn = findViewById(R.id.click_me_btn);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                showAlert("Clicked");
+                //showAlert("Clicked");
+                giap.track("Hello event");
+                giap.track("Hello event");
+                giap.track("Hello event");
             }
         });
     }

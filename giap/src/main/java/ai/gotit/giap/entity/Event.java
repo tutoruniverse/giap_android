@@ -18,6 +18,7 @@ public class Event implements Serializable {
     private String name;
     private long time;
     private JSONObject customProps = new JSONObject();
+    // TODO: device props
 
     public Event(String name) {
         this.name = name;
