@@ -3,6 +3,8 @@ package ai.gotit.giap.service;
 import android.app.Activity;
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response.ErrorListener;
@@ -20,7 +22,6 @@ import java.util.Map;
 import ai.gotit.giap.constant.CommonProps;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
 import ai.gotit.giap.util.Logger;
-import androidx.annotation.Nullable;
 
 public class NetworkManager {
     private static NetworkManager instance = null;
@@ -99,7 +100,17 @@ public class NetworkManager {
         request(Request.Method.GET, endpoint, params, null, callback, errorCallback);
     }
 
-    public static void updateProfile() {
-        // TODO
+    public void updateProfile(JSONObject data, Listener<JSONObject> callback, ErrorListener errorCallback) {
+        String distinctId = null;
+        JSONObject bodyData = null;
+        try {
+            distinctId = data.getString(CommonProps.CURRENT_DISTINCT_ID);
+            bodyData = new JSONObject(data.toString());
+            bodyData.remove(CommonProps.CURRENT_DISTINCT_ID);
+        } catch (JSONException e) {
+            Logger.error(e);
+        }
+        String endpoint = "profiles/" + distinctId;
+        request(Request.Method.PUT, endpoint, null, bodyData, callback, errorCallback);
     }
 }

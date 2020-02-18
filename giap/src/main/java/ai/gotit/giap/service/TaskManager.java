@@ -23,7 +23,6 @@ import ai.gotit.giap.constant.TaskType;
 import ai.gotit.giap.entity.Event;
 import ai.gotit.giap.entity.Task;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
-import ai.gotit.giap.exception.GIAPJsonException;
 import ai.gotit.giap.util.Logger;
 
 public class TaskManager {
@@ -92,18 +91,18 @@ public class TaskManager {
         }
     }
 
-    public void createEventTask(Event event) throws GIAPJsonException {
+    public void createEventTask(Event event) {
         Task task;
         try {
             task = new Task(TaskType.EVENT, event.serialize());
         } catch (JSONException exception) {
             Logger.error(exception);
-            throw new GIAPJsonException();
+            return;
         }
         taskQueue.add(task);
     }
 
-    public void createAliasTask(String userId) throws GIAPJsonException {
+    public void createAliasTask(String userId) {
         JSONObject json = new JSONObject();
         String distinctId = IdentityManager.getInstance().getDistinctId();
         try {
@@ -111,7 +110,7 @@ public class TaskManager {
             json.put(CommonProps.DISTINCT_ID, distinctId);
         } catch (JSONException exception) {
             Logger.error(exception);
-            throw new GIAPJsonException();
+            return;
         }
         Task task = new Task(TaskType.ALIAS, json);
         taskQueue.add(task);
@@ -119,7 +118,7 @@ public class TaskManager {
         IdentityManager.getInstance().updateDistinctId(userId);
     }
 
-    public void createIdentifyTask(String userId) throws GIAPJsonException {
+    public void createIdentifyTask(String userId) {
         JSONObject json = new JSONObject();
         String distinctId = IdentityManager.getInstance().getDistinctId();
         try {
@@ -127,12 +126,24 @@ public class TaskManager {
             json.put(CommonProps.CURRENT_DISTINCT_ID, distinctId);
         } catch (JSONException exception) {
             Logger.error(exception);
-            throw new GIAPJsonException();
+            return;
         }
         Task task = new Task(TaskType.IDENTIFY, json);
         taskQueue.add(task);
         // TODO: aware of multi-thread -> new events still have chance to use old distinctId
         IdentityManager.getInstance().updateDistinctId(userId);
+    }
+
+    public void createUpdateProfileTask(JSONObject props) {
+        try {
+            String currentDistinctId = IdentityManager.getInstance().getDistinctId();
+            props.put(CommonProps.CURRENT_DISTINCT_ID, currentDistinctId);
+        } catch (JSONException e) {
+            Logger.error(e);
+            return;
+        }
+        Task task = new Task(TaskType.UPDATE_PROFILE, props);
+        taskQueue.add(task);
     }
 
     private List<JSONObject> dequeueEvents() {
@@ -286,7 +297,30 @@ public class TaskManager {
                 }
 
                 case TaskType.UPDATE_PROFILE: {
-                    // TODO
+                    Logger.log("FLUSHING: try to flush updateProfile task");
+                    topTask.setProcessing(true);
+                    processingQueue.poll();
+                    NetworkManager.getInstance().updateProfile(topTask.getData(), new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Logger.log("FLUSHING: updateProfile() returned " + response.toString());
+                            cleanUpProcessingTasks();
+                            finishFlushing();
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError e) {
+                            // TODO: Only retry (not call cleanUpProcessingTasks) if receive no response or network error
+                            Logger.error(e);
+                            if (e instanceof NoConnectionError) {
+                                Logger.log("FLUSHING: network error, retry!");
+                            } else {
+                                // TODO: If code 5XX (Server error, also retry)
+                                cleanUpProcessingTasks();
+                            }
+                            finishFlushing();
+                        }
+                    });
                     break;
                 }
             }

@@ -6,13 +6,11 @@ import org.json.JSONObject;
 
 import ai.gotit.giap.entity.Event;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
-import ai.gotit.giap.exception.GIAPJsonException;
 import ai.gotit.giap.service.ConfigManager;
 import ai.gotit.giap.service.IdentityManager;
 import ai.gotit.giap.service.NetworkManager;
 import ai.gotit.giap.service.Repository;
 import ai.gotit.giap.service.TaskManager;
-import ai.gotit.giap.util.Logger;
 
 public class GIAP {
 
@@ -55,27 +53,19 @@ public class GIAP {
         } else {
             event = new Event(eventName, customProps);
         }
-        try {
-            TaskManager.getInstance().createEventTask(event);
-        } catch (GIAPJsonException e) {
-            Logger.error(e);
-        }
+        TaskManager.getInstance().createEventTask(event);
     }
 
     public void alias(String userId) {
-        try {
-            TaskManager.getInstance().createAliasTask(userId);
-        } catch (GIAPJsonException e) {
-            Logger.error(e);
-        }
+        TaskManager.getInstance().createAliasTask(userId);
     }
 
     public void identify(String userId) {
-        try {
-            TaskManager.getInstance().createIdentifyTask(userId);
-        } catch (GIAPJsonException e) {
-            Logger.error(e);
-        }
+        TaskManager.getInstance().createIdentifyTask(userId);
+    }
+
+    public void updateProfile(JSONObject props) {
+        TaskManager.getInstance().createUpdateProfileTask(props);
     }
 
     public void reset() {

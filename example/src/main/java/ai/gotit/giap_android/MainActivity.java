@@ -115,8 +115,7 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             JSONObject props = new JSONObject();
                             props.put("full_name", text);
-                            //giap.setProfileProperty(props);
-
+                            giap.updateProfile(props);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }

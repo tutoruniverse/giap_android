@@ -10,7 +10,6 @@ import ai.gotit.giap.common.Serializable;
 import ai.gotit.giap.constant.CommonConstant;
 import ai.gotit.giap.constant.EventProps;
 import ai.gotit.giap.exception.GIAPInvalidPropsPrefixException;
-import ai.gotit.giap.exception.GIAPJsonException;
 import ai.gotit.giap.service.IdentityManager;
 import ai.gotit.giap.util.Logger;
 
@@ -27,6 +26,16 @@ public class Event implements Serializable {
 
     public Event(String name, JSONObject customProps) {
         this(name);
+        Iterator<String> customPropsKeys = customProps.keys();
+        while (customPropsKeys.hasNext()) {
+            try {
+                String key = customPropsKeys.next();
+                Object value = customProps.get(key);
+                addCustomProp(key, value);
+            } catch (JSONException e) {
+                Logger.error(e);
+            }
+        }
         this.customProps = customProps;
     }
 
@@ -36,7 +45,7 @@ public class Event implements Serializable {
         time = timeSec;
     }
 
-    public void addCustomProp(String key, Object value) throws GIAPJsonException {
+    public void addCustomProp(String key, Object value) {
         if (key.startsWith(CommonConstant.DEFAULT_PROP_PREFIX)) {
             throw new GIAPInvalidPropsPrefixException();
         }
@@ -44,7 +53,6 @@ public class Event implements Serializable {
             customProps.put(key, value);
         } catch (JSONException exception) {
             Logger.error(exception);
-            throw new GIAPJsonException();
         }
     }
 
