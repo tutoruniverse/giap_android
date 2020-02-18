@@ -10,6 +10,7 @@ import ai.gotit.giap.common.Serializable;
 import ai.gotit.giap.constant.CommonConstant;
 import ai.gotit.giap.constant.EventProps;
 import ai.gotit.giap.exception.GIAPInvalidPropsPrefixException;
+import ai.gotit.giap.service.DeviceInfoManager;
 import ai.gotit.giap.service.IdentityManager;
 import ai.gotit.giap.util.Logger;
 
@@ -17,11 +18,12 @@ public class Event implements Serializable {
     private String name;
     private long time;
     private JSONObject customProps = new JSONObject();
-    // TODO: device props
+    private JSONObject deviceInfo;
 
     public Event(String name) {
         this.name = name;
         updateTimestamp();
+        this.deviceInfo = DeviceInfoManager.getInstance().getDeviceInfo();
     }
 
     public Event(String name, JSONObject customProps) {
@@ -61,6 +63,14 @@ public class Event implements Serializable {
         json.put(EventProps.DISTINCT_ID, IdentityManager.getInstance().getDistinctId());
         json.put(EventProps.NAME, name);
         json.put(EventProps.TIME, time);
+
+        // Append device's info
+        Iterator<String> deviceInfoKeys = deviceInfo.keys();
+        while (deviceInfoKeys.hasNext()) {
+            String key = deviceInfoKeys.next();
+            Object value = deviceInfo.get(key);
+            json.put(key, value);
+        }
 
         // Append customProps
         Iterator<String> customPropsKeys = customProps.keys();

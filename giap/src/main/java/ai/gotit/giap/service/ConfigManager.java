@@ -10,7 +10,6 @@ public class ConfigManager {
     private String serverUrl = null;
     private String token = null;
     private long tasksFlushingInterval = DefaultConfig.TASKS_FLUSHING_INTERVAL;
-    private int requestRetryTimes = DefaultConfig.REQUEST_RETRY_TIMES;
 
     private ConfigManager() {
     }
@@ -52,13 +51,5 @@ public class ConfigManager {
 
     public void setTasksFlushingInterval(long tasksFlushingInterval) {
         this.tasksFlushingInterval = tasksFlushingInterval;
-    }
-
-    public int getRequestRetryTimes() {
-        return requestRetryTimes;
-    }
-
-    public void setRequestRetryTimes(int requestRetryTimes) {
-        this.requestRetryTimes = requestRetryTimes;
     }
 }

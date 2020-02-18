@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import ai.gotit.giap.entity.Event;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
 import ai.gotit.giap.service.ConfigManager;
+import ai.gotit.giap.service.DeviceInfoManager;
 import ai.gotit.giap.service.IdentityManager;
 import ai.gotit.giap.service.NetworkManager;
 import ai.gotit.giap.service.Repository;
@@ -34,6 +35,7 @@ public class GIAP {
         configManager.setToken(token);
 
         Repository.initialize();
+        DeviceInfoManager.initialize();
         NetworkManager.initialize();
         IdentityManager.initialize();
         TaskManager.initialize();
