@@ -20,6 +20,7 @@ import java.util.Map;
 import ai.gotit.giap.constant.CommonProps;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
 import ai.gotit.giap.util.Logger;
+import androidx.annotation.Nullable;
 
 public class NetworkManager {
     private static NetworkManager instance = null;
@@ -43,7 +44,7 @@ public class NetworkManager {
         return instance;
     }
 
-    private void request(int method, String endpoint, Map<String, String> params, JSONObject body, Listener<JSONObject> callback, ErrorListener errorCallback) {
+    private void request(int method, String endpoint, Map<String, String> params, @Nullable JSONObject body, Listener<JSONObject> callback, ErrorListener errorCallback) {
         Uri.Builder builder = new Uri.Builder();
         String serverUrl = ConfigManager.getInstance().getServerUrl();
         if (!serverUrl.startsWith("http")) {
@@ -73,7 +74,7 @@ public class NetworkManager {
                 "REQUEST: sent a request"
                         + " - " + requestJson.getMethod()
                         + " " + requestJson.getUrl()
-                        + " - " + body.toString()
+                        + (body != null ? " - " + body.toString() : "")
         );
     }
 
