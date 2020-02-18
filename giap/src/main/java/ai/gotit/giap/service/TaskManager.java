@@ -225,6 +225,8 @@ public class TaskManager {
 
                 case TaskType.ALIAS: {
                     Logger.log("FLUSHING: try to flush alias task");
+                    topTask.setProcessing(true);
+                    processingQueue.poll();
                     NetworkManager.getInstance().alias(topTask.getData(), new Response.Listener<JSONObject>() {
                         @Override
                         public void onResponse(JSONObject response) {
@@ -250,7 +252,9 @@ public class TaskManager {
                 }
 
                 case TaskType.IDENTIFY: {
-                    Logger.log("FLUSHING: try to flush identity task");
+                    Logger.log("FLUSHING: try to flush identify task");
+                    topTask.setProcessing(true);
+                    processingQueue.poll();
                     try {
                         String userId = topTask.getData().getString(CommonProps.USER_ID);
                         String currentDistinctId = topTask.getData().getString(CommonProps.CURRENT_DISTINCT_ID);
@@ -280,6 +284,11 @@ public class TaskManager {
                     }
                     break;
                 }
+
+                case TaskType.UPDATE_PROFILE: {
+                    // TODO
+                    break;
+                }
             }
         }
     };
@@ -301,5 +310,7 @@ public class TaskManager {
 
     public void stop() {
         scheduledJobHandler.cancel(false);
+        scheduledJobHandler = null;
+        scheduled = false;
     }
 }

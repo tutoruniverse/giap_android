@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
         logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // giap.reset();
+                giap.reset();
                 setAuthState(false);
             }
         });

@@ -48,11 +48,11 @@ public class NetworkManager {
         String serverUrl = ConfigManager.getInstance().getServerUrl();
         if (!serverUrl.startsWith("http")) {
             builder.scheme("https");
-            builder.authority(serverUrl);
+            builder.encodedAuthority(serverUrl);
         } else {
             builder.encodedPath(serverUrl);
         }
-        builder.appendPath(endpoint);
+        builder.appendEncodedPath(endpoint);
         if (params != null) {
             for (Map.Entry<String, String> entry : params.entrySet()) {
                 builder.appendQueryParameter(entry.getKey(), entry.getValue());

@@ -35,7 +35,7 @@ public class IdentityManager {
         return distinctId;
     }
 
-    private void generateNewDistinctId() {
+    public void generateNewDistinctId() {
         distinctId = UUID.randomUUID().toString();
         updateDistinctId(distinctId);
     }
@@ -43,13 +43,5 @@ public class IdentityManager {
     public void updateDistinctId(String distinctId) {
         this.distinctId = distinctId;
         Repository.getInstance().put(RepositoryKey.DISTINCT_ID, distinctId);
-    }
-
-    public void alias() {
-        // TODO
-    }
-
-    public void identity() {
-        // TODO
     }
 }

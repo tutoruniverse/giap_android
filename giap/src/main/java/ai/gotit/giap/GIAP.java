@@ -77,4 +77,8 @@ public class GIAP {
             Logger.error(e);
         }
     }
+
+    public void reset() {
+        IdentityManager.getInstance().generateNewDistinctId();
+    }
 }
