@@ -12,11 +12,14 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import ai.gotit.giap.constant.CommonConstant;
 import ai.gotit.giap.constant.CommonProps;
 import ai.gotit.giap.constant.RepositoryKey;
 import ai.gotit.giap.constant.TaskType;
@@ -31,10 +34,11 @@ public class TaskManager {
     private Queue<Task> processingQueue = new LinkedList<>();
     private Boolean flushing = false;
     private Boolean started = false;
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(100);
+    private ScheduledExecutorService scheduler = null;
     private ScheduledFuture<?> scheduledJobHandler;
 
     private TaskManager() {
+        initScheduler();
         start();
     }
 
@@ -172,6 +176,38 @@ public class TaskManager {
         return dequeueEvents(previousList);
     }
 
+    private Response.Listener<JSONObject> createSuccessCallback(final String taskName) {
+        return new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Logger.log("FLUSHING: " + taskName + " task(s) succeed! - " + response.toString());
+                cleanUpProcessingTasks();
+                finishFlushing();
+            }
+        };
+    }
+
+    private Response.ErrorListener createErrorCallback() {
+        return new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError e) {
+                Logger.error(e);
+                Logger.log(String.valueOf(e.networkResponse.statusCode));
+                if (e instanceof NoConnectionError) {
+                    Logger.log("FLUSHING: network error, retry!");
+                } else if (
+                        e.networkResponse.statusCode >= CommonConstant.MIN_SERVER_ERROR_STATUS_CODE
+                                && e.networkResponse.statusCode <= CommonConstant.MAX_SERVER_ERROR_STATUS_CODE
+                ) {
+                    Logger.log("FLUSHING: GIAP Platform Core internal error!");
+                } else {
+                    cleanUpProcessingTasks();
+                }
+                finishFlushing();
+            }
+        };
+    }
+
     private void cleanUpProcessingTasks() {
         while (taskQueue.size() > 0 && taskQueue.peek().getProcessing()) {
             taskQueue.poll();
@@ -215,27 +251,11 @@ public class TaskManager {
                     if (eventBatchSize > 0) {
                         Logger.log("FLUSHING: dequeue " + eventBatchSize + " events to the batch");
                         JSONArray bodyData = new JSONArray(eventBatch);
-                        NetworkManager.getInstance().track(bodyData, new Response.Listener<JSONObject>() {
-                            @Override
-                            public void onResponse(JSONObject response) {
-                                Logger.log("FLUSHING: track() returned " + response.toString());
-                                cleanUpProcessingTasks();
-                                finishFlushing();
-                            }
-                        }, new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError e) {
-                                // TODO: Only retry (not call cleanUpProcessingTasks) if receive no response or network error
-                                Logger.error(e);
-                                if (e instanceof NoConnectionError) {
-                                    Logger.log("FLUSHING: network error, retry!");
-                                } else {
-                                    // TODO: If code 5XX (Server error, also retry)
-                                    cleanUpProcessingTasks();
-                                }
-                                finishFlushing();
-                            }
-                        });
+                        NetworkManager.getInstance().track(
+                                bodyData,
+                                createSuccessCallback(topTask.getType()),
+                                createErrorCallback()
+                        );
                     } else {
                         Logger.warn("FLUSHING: empty event batch! (Should not happen)");
                     }
@@ -246,27 +266,11 @@ public class TaskManager {
                     Logger.log("FLUSHING: try to flush alias task");
                     topTask.setProcessing(true);
                     processingQueue.poll();
-                    NetworkManager.getInstance().alias(topTask.getData(), new Response.Listener<JSONObject>() {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            Logger.log("FLUSHING: alias() returned " + response.toString());
-                            cleanUpProcessingTasks();
-                            finishFlushing();
-                        }
-                    }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError e) {
-                            // TODO: Only retry (not call cleanUpProcessingTasks) if receive no response or network error
-                            Logger.error(e);
-                            if (e instanceof NoConnectionError) {
-                                Logger.log("FLUSHING: network error, retry!");
-                            } else {
-                                // TODO: If code 5XX (Server error, also retry)
-                                cleanUpProcessingTasks();
-                            }
-                            finishFlushing();
-                        }
-                    });
+                    NetworkManager.getInstance().alias(
+                            topTask.getData(),
+                            createSuccessCallback(topTask.getType()),
+                            createErrorCallback()
+                    );
                     break;
                 }
 
@@ -277,27 +281,12 @@ public class TaskManager {
                     try {
                         String userId = topTask.getData().getString(CommonProps.USER_ID);
                         String currentDistinctId = topTask.getData().getString(CommonProps.CURRENT_DISTINCT_ID);
-                        NetworkManager.getInstance().identify(userId, currentDistinctId, new Response.Listener<JSONObject>() {
-                            @Override
-                            public void onResponse(JSONObject response) {
-                                Logger.log("FLUSHING: identify() returned " + response.toString());
-                                cleanUpProcessingTasks();
-                                finishFlushing();
-                            }
-                        }, new Response.ErrorListener() {
-                            @Override
-                            public void onErrorResponse(VolleyError e) {
-                                // TODO: Only retry (not call cleanUpProcessingTasks) if receive no response or network error
-                                Logger.error(e);
-                                if (e instanceof NoConnectionError) {
-                                    Logger.log("FLUSHING: network error, retry!");
-                                } else {
-                                    // TODO: If code 5XX (Server error, also retry)
-                                    cleanUpProcessingTasks();
-                                }
-                                finishFlushing();
-                            }
-                        });
+                        NetworkManager.getInstance().identify(
+                                userId,
+                                currentDistinctId,
+                                createSuccessCallback(topTask.getType()),
+                                createErrorCallback()
+                        );
                     } catch (JSONException e) {
                         Logger.error(e);
                     }
@@ -308,34 +297,52 @@ public class TaskManager {
                     Logger.log("FLUSHING: try to flush updateProfile task");
                     topTask.setProcessing(true);
                     processingQueue.poll();
-                    NetworkManager.getInstance().updateProfile(topTask.getData(), new Response.Listener<JSONObject>() {
-                        @Override
-                        public void onResponse(JSONObject response) {
-                            Logger.log("FLUSHING: updateProfile() returned " + response.toString());
-                            cleanUpProcessingTasks();
-                            finishFlushing();
-                        }
-                    }, new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(VolleyError e) {
-                            // TODO: Only retry (not call cleanUpProcessingTasks) if receive no response or network error
-                            Logger.error(e);
-                            if (e instanceof NoConnectionError) {
-                                Logger.log("FLUSHING: network error, retry!");
-                            } else {
-                                // TODO: If code 5XX (Server error, also retry)
-                                cleanUpProcessingTasks();
-                            }
-                            finishFlushing();
-                        }
-                    });
+                    NetworkManager.getInstance().updateProfile(
+                            topTask.getData(),
+                            createSuccessCallback(topTask.getType()),
+                            createErrorCallback()
+                    );
                     break;
                 }
             }
         }
     };
 
-    private void schedule() {
+    private synchronized void initScheduler() {
+        if (scheduler != null) {
+            return;
+        }
+        scheduler = new ScheduledThreadPoolExecutor(100) {
+            @Override
+            public void afterExecute(Runnable r, Throwable t) {
+                super.afterExecute(r, t);
+                if (t == null && r instanceof ScheduledFuture<?>) {
+                    try {
+                        ((ScheduledFuture<?>) r).get();
+                    } catch (CancellationException e) {
+                        t = e;
+                    } catch (ExecutionException e) {
+                        t = e.getCause();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+                if (t != null) {
+                    // Exception occurred
+                    Logger.error(t, "SCHEDULED TASK: Uncaught exception is detected! Scheduler is shut down.");
+                    // Restart the runnable again
+                    Logger.log("Trying to restart the scheduler ...");
+                    startScheduling();
+                }
+            }
+        };
+    }
+
+    private void startScheduling() {
+        if (scheduler == null) {
+            Logger.error("TASK MANAGER: scheduler not found (should not be). Can not start scheduling.");
+            return;
+        }
         long tasksFlushingInterval = ConfigManager.getInstance().getTasksFlushingInterval();
         if (scheduledJobHandler != null && !scheduledJobHandler.isDone()) {
             Logger.warn("TASK MANAGER: scheduling failed! Previous scheduled job has not done yet!");
@@ -357,7 +364,7 @@ public class TaskManager {
         }
         started = true;
         loadStoredTasks();
-        schedule();
+        startScheduling();
     }
 
     public void restart() {
@@ -366,7 +373,7 @@ public class TaskManager {
             return;
         }
         started = true;
-        schedule();
+        startScheduling();
     }
 
     public void stop() {

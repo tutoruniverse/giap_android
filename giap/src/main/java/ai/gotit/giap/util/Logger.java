@@ -16,11 +16,11 @@ public class Logger {
         Log.d(CommonConstant.LOG_TAG, constructMessage(message));
     }
 
-    public static void warn(Exception exception, String message) {
+    public static void warn(Throwable exception, String message) {
         Log.w(CommonConstant.LOG_TAG, constructMessage(message), exception);
     }
 
-    public static void warn(Exception exception) {
+    public static void warn(Throwable exception) {
         warn(exception, "Warning");
     }
 
@@ -28,11 +28,11 @@ public class Logger {
         Log.w(CommonConstant.LOG_TAG, constructMessage(message));
     }
 
-    public static void error(Exception exception, String message) {
+    public static void error(Throwable exception, String message) {
         Log.e(CommonConstant.LOG_TAG, constructMessage(message), exception);
     }
 
-    public static void error(Exception exception) {
+    public static void error(Throwable exception) {
         error(exception, "Error");
     }
 

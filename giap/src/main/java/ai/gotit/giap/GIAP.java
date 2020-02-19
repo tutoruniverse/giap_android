@@ -9,6 +9,7 @@ import ai.gotit.giap.entity.Event;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
 import ai.gotit.giap.service.ConfigManager;
 import ai.gotit.giap.service.DeviceInfoManager;
+import ai.gotit.giap.service.ExceptionHandler;
 import ai.gotit.giap.service.IdentityManager;
 import ai.gotit.giap.service.NetworkManager;
 import ai.gotit.giap.service.Repository;
@@ -25,6 +26,7 @@ public class GIAP {
     }
 
     private GIAP(String serverUrl, String token, Activity context) {
+        ExceptionHandler.initialize();
         ConfigManager configManager = ConfigManager.getInstance();
         configManager.setContext(context);
         configManager.setServerUrl(serverUrl);

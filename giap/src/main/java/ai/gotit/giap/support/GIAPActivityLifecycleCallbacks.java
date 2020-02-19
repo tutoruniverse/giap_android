@@ -12,6 +12,7 @@ public class GIAPActivityLifecycleCallbacks implements Application.ActivityLifec
 
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+        Logger.log("LIFECYCLE: created!");
     }
 
     @Override
