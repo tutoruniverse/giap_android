@@ -30,11 +30,12 @@ public class TaskManager {
     private Queue<Task> taskQueue = new LinkedList<>();
     private Queue<Task> processingQueue = new LinkedList<>();
     private Boolean flushing = false;
-    private Boolean scheduled = false;
+    private Boolean started = false;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(100);
     private ScheduledFuture<?> scheduledJobHandler;
 
     private TaskManager() {
+        start();
     }
 
     public static TaskManager initialize() {
@@ -43,8 +44,6 @@ public class TaskManager {
         }
 
         instance = new TaskManager();
-        instance.loadStoredTasks();
-        instance.schedule();
         return instance;
     }
 
@@ -53,10 +52,11 @@ public class TaskManager {
     }
 
     public void storeTasks() {
-        //TODO: restore processing tasks?
+        Logger.log("TASK MANAGER: storing tasks into Repository ...");
         JSONArray array = new JSONArray();
-        while (taskQueue.size() > 0) {
-            Task task = taskQueue.poll();
+        Queue<Task> clonedQueue = new LinkedList<>(taskQueue);
+        while (clonedQueue.size() > 0) {
+            Task task = clonedQueue.poll();
             JSONObject serializedTask;
             try {
                 serializedTask = task.serialize();
@@ -67,14 +67,17 @@ public class TaskManager {
             array.put(serializedTask);
         }
         Repository.getInstance().put(RepositoryKey.STORED_TASKS, array.toString());
+        Logger.log("TASK MANAGER: storing has completed!");
     }
 
     private void loadStoredTasks() {
+        Logger.log("TASK MANAGER: loading tasks from Repository ...");
         String storedTasks = Repository.getInstance().getString(RepositoryKey.STORED_TASKS);
         if (storedTasks != null) {
             JSONArray array;
             try {
                 array = new JSONArray(storedTasks);
+                Logger.log("TASK MANAGER: found " + array.length() + " task(s) in storage.");
             } catch (JSONException e) {
                 Logger.error(e);
                 return;
@@ -89,6 +92,7 @@ public class TaskManager {
                 }
             }
         }
+        Logger.log("TASK MANAGER: loading saved tasks completed!");
     }
 
     public void createEventTask(Event event) {
@@ -172,13 +176,17 @@ public class TaskManager {
         while (taskQueue.size() > 0 && taskQueue.peek().getProcessing()) {
             taskQueue.poll();
         }
-        Logger.log("Cleaned up finished tasks!");
+        Logger.log("FLUSHING: Cleaned up finished tasks!");
     }
 
     private void finishFlushing() {
         processingQueue.clear();
+        if (!started) {
+            Logger.log("FLUSHING: scheduler has stopped due to app's inactivity, save current queue into storage");
+            storeTasks();
+        }
         flushing = false;
-        Logger.log("Flushing finished!");
+        Logger.log("FLUSHING: Flushing finished!");
     }
 
     private final Runnable flush = new Runnable() {
@@ -327,24 +335,50 @@ public class TaskManager {
         }
     };
 
-    public void schedule() {
-        if (scheduled) {
-            Logger.warn("Scheduler is started. Call stop() or forceStop() before starting again.");
+    private void schedule() {
+        long tasksFlushingInterval = ConfigManager.getInstance().getTasksFlushingInterval();
+        if (scheduledJobHandler != null && !scheduledJobHandler.isDone()) {
+            Logger.warn("TASK MANAGER: scheduling failed! Previous scheduled job has not done yet!");
             return;
         }
-        scheduled = true;
-        long tasksFlushingInterval = ConfigManager.getInstance().getTasksFlushingInterval();
         scheduledJobHandler = scheduler.scheduleAtFixedRate(
                 flush,
                 tasksFlushingInterval,
                 tasksFlushingInterval,
                 TimeUnit.SECONDS
         );
+        Logger.log("TASK MANAGER: scheduler has started. Flushing tasks every " + tasksFlushingInterval + " second(s).");
+    }
+
+    public void start() {
+        if (started) {
+            Logger.warn("TASK MANAGER: Scheduler has started. Call stop() before starting again.");
+            return;
+        }
+        started = true;
+        loadStoredTasks();
+        schedule();
+    }
+
+    public void restart() {
+        if (started) {
+            Logger.warn("TASK MANAGER: Scheduler has started. Call stop() before starting again.");
+            return;
+        }
+        started = true;
+        schedule();
     }
 
     public void stop() {
-        scheduledJobHandler.cancel(false);
-        scheduledJobHandler = null;
-        scheduled = false;
+        if (!started) {
+            Logger.warn("TASK MANAGER: Scheduler has not started yet.");
+            return;
+        }
+        Logger.log("TASK MANAGER: stopping scheduler ...");
+        if (scheduledJobHandler != null) {
+            scheduledJobHandler.cancel(false);
+        }
+        storeTasks();
+        started = false;
     }
 }

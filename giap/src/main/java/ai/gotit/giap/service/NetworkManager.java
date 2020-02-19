@@ -3,8 +3,6 @@ package ai.gotit.giap.service;
 import android.app.Activity;
 import android.net.Uri;
 
-import androidx.annotation.Nullable;
-
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response.ErrorListener;
@@ -22,6 +20,7 @@ import java.util.Map;
 import ai.gotit.giap.constant.CommonProps;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
 import ai.gotit.giap.util.Logger;
+import androidx.annotation.Nullable;
 
 public class NetworkManager {
     private static NetworkManager instance = null;
@@ -45,7 +44,7 @@ public class NetworkManager {
         return instance;
     }
 
-    private void request(int method, String endpoint, Map<String, String> params, @Nullable JSONObject body, Listener<JSONObject> callback, ErrorListener errorCallback) {
+    private void request(final int method, String endpoint, Map<String, String> params, @Nullable JSONObject body, Listener<JSONObject> callback, ErrorListener errorCallback) {
         Uri.Builder builder = new Uri.Builder();
         String serverUrl = ConfigManager.getInstance().getServerUrl();
         if (!serverUrl.startsWith("http")) {
@@ -66,7 +65,9 @@ public class NetworkManager {
             public Map<String, String> getHeaders() {
                 Map<String, String> params = new HashMap<>();
                 params.put("Authorization", "Bearer " + ConfigManager.getInstance().getToken());
-                params.put("Content-Type", "application/json");
+                if (method != Method.GET) {
+                    params.put("Content-Type", "application/json");
+                }
                 return params;
             }
         };

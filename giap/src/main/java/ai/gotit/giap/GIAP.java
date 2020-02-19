@@ -1,6 +1,7 @@
 package ai.gotit.giap;
 
 import android.app.Activity;
+import android.app.Application;
 
 import org.json.JSONObject;
 
@@ -12,6 +13,8 @@ import ai.gotit.giap.service.IdentityManager;
 import ai.gotit.giap.service.NetworkManager;
 import ai.gotit.giap.service.Repository;
 import ai.gotit.giap.service.TaskManager;
+import ai.gotit.giap.support.GIAPActivityLifecycleCallbacks;
+import ai.gotit.giap.util.Logger;
 
 public class GIAP {
 
@@ -21,7 +24,17 @@ public class GIAP {
         return instance;
     }
 
-    private GIAP() {
+    private GIAP(String serverUrl, String token, Activity context) {
+        ConfigManager configManager = ConfigManager.getInstance();
+        configManager.setContext(context);
+        configManager.setServerUrl(serverUrl);
+        configManager.setToken(token);
+        registerGIAPActivityLifecycleCallbacks(context);
+        Repository.initialize();
+        DeviceInfoManager.initialize();
+        NetworkManager.initialize();
+        IdentityManager.initialize();
+        TaskManager.initialize();
     }
 
     public static GIAP initialize(String serverUrl, String token, Activity context) {
@@ -29,19 +42,18 @@ public class GIAP {
             throw new GIAPInstanceExistsException();
         }
 
-        ConfigManager configManager = ConfigManager.getInstance();
-        configManager.setContext(context);
-        configManager.setServerUrl(serverUrl);
-        configManager.setToken(token);
-
-        Repository.initialize();
-        DeviceInfoManager.initialize();
-        NetworkManager.initialize();
-        IdentityManager.initialize();
-        TaskManager.initialize();
-
-        instance = new GIAP();
+        instance = new GIAP(serverUrl, token, context);
         return instance;
+    }
+
+    private void registerGIAPActivityLifecycleCallbacks(Activity context) {
+        if (context.getApplicationContext() instanceof Application) {
+            final Application app = (Application) context.getApplicationContext();
+            GIAPActivityLifecycleCallbacks callbacks = new GIAPActivityLifecycleCallbacks();
+            app.registerActivityLifecycleCallbacks(callbacks);
+        } else {
+            Logger.warn("Context is not an Application. We won't be able to automatically flush on background.");
+        }
     }
 
     public void track(String eventName) {

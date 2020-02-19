@@ -42,9 +42,7 @@ public class Event implements Serializable {
     }
 
     public void updateTimestamp() {
-        long timeMilli = new Date().getTime();
-        long timeSec = (long) Math.floor(timeMilli / 1000);
-        time = timeSec;
+        time = new Date().getTime();
     }
 
     public void addCustomProp(String key, Object value) {
