@@ -58,11 +58,19 @@ public class MainActivity extends AppCompatActivity {
         signUpButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showTextInputDialog(InputType.TYPE_CLASS_TEXT, "User ID", new OnSubmitDialogListener() {
+                showSignUpDialog(new SignUpDialogFragment.OnSubmitListener() {
                     @Override
-                    public void onSubmit(String text) {
-                        giap.alias(text);
-                        setAuthState(true);
+                    public void onSubmit(String userId, String email) {
+                        try {
+                            JSONObject props = new JSONObject();
+                            props.put("email", email);
+                            giap.track("Sign Up", props);
+                            giap.alias(userId);
+                            giap.updateProfile(props);
+                            setAuthState(true);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
             }
@@ -177,6 +185,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
         builder.show();
+    }
+
+    private void showSignUpDialog(SignUpDialogFragment.OnSubmitListener onSubmitListener) {
+        SignUpDialogFragment dialog = new SignUpDialogFragment();
+        dialog.setOnSubmitListener(onSubmitListener);
+        dialog.show(getSupportFragmentManager(), "sign_up_dialog");
     }
 
     interface OnSubmitDialogListener {
