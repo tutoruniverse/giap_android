@@ -37,8 +37,8 @@ public class MainActivity extends AppCompatActivity {
         setAuthState(false);
 
         final GIAP giap = GIAP.initialize(
-                "https://5e4a53406eafb7001488c319.mockapi.io",
-                "123",
+                "https://afd95709.ngrok.io",
+                "eric",
                 MainActivity.this
         );
 

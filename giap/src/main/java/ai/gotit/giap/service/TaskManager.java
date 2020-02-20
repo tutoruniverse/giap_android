@@ -316,11 +316,16 @@ public class TaskManager {
             @Override
             public void afterExecute(Runnable r, Throwable t) {
                 super.afterExecute(r, t);
+                boolean isDone = false;
                 if (t == null && r instanceof ScheduledFuture<?>) {
                     try {
-                        ((ScheduledFuture<?>) r).get();
+                        isDone = ((ScheduledFuture<?>) r).isDone();
+                        if (isDone) {
+                            Logger.warn("SCHEDULED TASK: Scheduler is shut down.");
+                            ((ScheduledFuture<?>) r).get();
+                        }
                     } catch (CancellationException e) {
-                        t = e;
+                        Logger.warn("SCHEDULED TASK: Scheduled job is cancelled!");
                     } catch (ExecutionException e) {
                         t = e.getCause();
                     } catch (InterruptedException e) {
@@ -329,10 +334,12 @@ public class TaskManager {
                 }
                 if (t != null) {
                     // Exception occurred
-                    Logger.error(t, "SCHEDULED TASK: Uncaught exception is detected! Scheduler is shut down.");
+                    Logger.error(t, "SCHEDULED TASK: Uncaught exception is detected!");
                     // Restart the runnable again
-                    Logger.log("Trying to restart the scheduler ...");
-                    startScheduling();
+                    if (isDone) {
+                        Logger.log("Trying to restart the scheduler ...");
+                        startScheduling();
+                    }
                 }
             }
         };
