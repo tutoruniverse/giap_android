@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         setAuthState(false);
 
         final GIAP giap = GIAP.initialize(
-                "https://afd95709.ngrok.io",
+                "http://13.250.58.88",
                 "eric",
                 MainActivity.this
         );
@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         askButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showTextInputDialog(InputType.TYPE_CLASS_NUMBER, "Problem text", new OnSubmitDialogListener() {
+                showTextInputDialog(InputType.TYPE_CLASS_TEXT, "Problem text", new OnSubmitDialogListener() {
                     @Override
                     public void onSubmit(String text) {
                         try {
@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
         setFullNameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showTextInputDialog(InputType.TYPE_CLASS_NUMBER, "Full name", new OnSubmitDialogListener() {
+                showTextInputDialog(InputType.TYPE_CLASS_TEXT, "Full name", new OnSubmitDialogListener() {
                     @Override
                     public void onSubmit(String text) {
                         try {

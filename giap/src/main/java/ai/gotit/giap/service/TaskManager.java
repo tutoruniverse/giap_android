@@ -192,17 +192,18 @@ public class TaskManager {
             @Override
             public void onErrorResponse(VolleyError e) {
                 Logger.error(e);
-                Logger.log(String.valueOf(e.networkResponse.statusCode));
                 if (e instanceof NoConnectionError) {
                     Logger.log("FLUSHING: network error, retry!");
-                } else if (
-                        e.networkResponse.statusCode >= CommonConstant.MIN_SERVER_ERROR_STATUS_CODE
-                                && e.networkResponse.statusCode <= CommonConstant.MAX_SERVER_ERROR_STATUS_CODE
-                ) {
-                    Logger.log("FLUSHING: GIAP Platform Core internal error!");
                 } else {
-                    cleanUpProcessingTasks();
+                    int statusCode = e.networkResponse.statusCode;
+                    if (statusCode >= CommonConstant.MIN_SERVER_ERROR_STATUS_CODE && statusCode <= CommonConstant.MAX_SERVER_ERROR_STATUS_CODE
+                    ) {
+                        Logger.log("FLUSHING: GIAP Platform Core internal error!");
+                    } else {
+                        cleanUpProcessingTasks();
+                    }
                 }
+
                 finishFlushing();
             }
         };
