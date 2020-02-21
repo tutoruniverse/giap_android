@@ -17,6 +17,33 @@ import ai.gotit.giap.service.TaskManager;
 import ai.gotit.giap.support.GIAPActivityLifecycleCallbacks;
 import ai.gotit.giap.util.Logger;
 
+/**
+ * Main class of GIAP Android SDK.
+ *
+ * <p>Call {@link #initialize(String, String, Activity)} first to initialize GIAP and its
+ * sub-services.</p>
+ *
+ * <p>Then call {@link #getInstance()} to get singleton instance. CAUTION: getInstance can return
+ * null if {@link #initialize(String, String, Activity)} is not called first.</p>
+ *
+ * <p>Call {@link #track(String, JSONObject)} to emit your event to the system:</p>
+ * <pre>
+ * {@code
+ * final GIAP giap = GIAP.initialize(
+ *     "http://server-url.example",
+ *     "your_project_token",
+ *     MainActivity.this
+ * );
+ *
+ * try {
+ *     JSONObject props = new JSONObject();
+ *     props.put("price", 100);
+ *     props.put("package_sku", "package_1_free");
+ *     giap.track("Purchase", props);
+ * } catch (JSONException e) {}
+ * }
+ * </pre>
+ */
 public class GIAP {
 
     private static GIAP instance = null;
