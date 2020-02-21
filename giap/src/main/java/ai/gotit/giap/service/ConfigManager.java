@@ -49,6 +49,10 @@ public class ConfigManager {
         return tasksFlushingInterval;
     }
 
+    /**
+     * Only take effect after the TaskManager restart its scheduler.
+     * @param tasksFlushingInterval period in second between 2 flushing action
+     */
     public void setTasksFlushingInterval(long tasksFlushingInterval) {
         this.tasksFlushingInterval = tasksFlushingInterval;
     }
