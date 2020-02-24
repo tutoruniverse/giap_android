@@ -27,7 +27,7 @@ import java.util.UUID;
 
 import ai.gotit.giap.BuildConfig;
 import ai.gotit.giap.constant.DeviceInfoProps;
-import ai.gotit.giap.constant.RepositoryKey;
+import ai.gotit.giap.constant.StorageKey;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
 import ai.gotit.giap.util.Logger;
 
@@ -118,10 +118,10 @@ public class DeviceInfoManager {
     }
 
     private String getDeviceId() {
-        String deviceId = Repository.getInstance().getString(RepositoryKey.DEVICE_ID);
+        String deviceId = Storage.getInstance().getString(StorageKey.DEVICE_ID);
         if (deviceId == null) {
             deviceId = UUID.randomUUID().toString();
-            Repository.getInstance().put(RepositoryKey.DEVICE_ID, deviceId);
+            Storage.getInstance().put(StorageKey.DEVICE_ID, deviceId);
         }
         return deviceId;
     }

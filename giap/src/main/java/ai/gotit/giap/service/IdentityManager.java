@@ -2,7 +2,7 @@ package ai.gotit.giap.service;
 
 import java.util.UUID;
 
-import ai.gotit.giap.constant.RepositoryKey;
+import ai.gotit.giap.constant.StorageKey;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
 
 public class IdentityManager {
@@ -10,7 +10,7 @@ public class IdentityManager {
     private String distinctId = null;
 
     private IdentityManager() {
-        String distinctId = Repository.getInstance().getString(RepositoryKey.DISTINCT_ID);
+        String distinctId = Storage.getInstance().getString(StorageKey.DISTINCT_ID);
         if (distinctId == null) {
             generateNewDistinctId();
         } else {
@@ -42,6 +42,6 @@ public class IdentityManager {
 
     public void updateDistinctId(String distinctId) {
         this.distinctId = distinctId;
-        Repository.getInstance().put(RepositoryKey.DISTINCT_ID, distinctId);
+        Storage.getInstance().put(StorageKey.DISTINCT_ID, distinctId);
     }
 }

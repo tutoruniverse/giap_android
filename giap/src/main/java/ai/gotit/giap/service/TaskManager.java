@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import ai.gotit.giap.constant.CommonConstant;
 import ai.gotit.giap.constant.CommonProps;
-import ai.gotit.giap.constant.RepositoryKey;
+import ai.gotit.giap.constant.StorageKey;
 import ai.gotit.giap.constant.TaskType;
 import ai.gotit.giap.entity.Event;
 import ai.gotit.giap.entity.Task;
@@ -56,7 +56,7 @@ public class TaskManager {
     }
 
     public void storeTasks() {
-        Logger.log("TASK MANAGER: storing tasks into Repository ...");
+        Logger.log("TASK MANAGER: storing tasks into Storage ...");
         JSONArray array = new JSONArray();
         Queue<Task> clonedQueue = new LinkedList<>(taskQueue);
         while (clonedQueue.size() > 0) {
@@ -70,13 +70,13 @@ public class TaskManager {
             }
             array.put(serializedTask);
         }
-        Repository.getInstance().put(RepositoryKey.STORED_TASKS, array.toString());
+        Storage.getInstance().put(StorageKey.STORED_TASKS, array.toString());
         Logger.log("TASK MANAGER: storing has completed!");
     }
 
     private void loadStoredTasks() {
-        Logger.log("TASK MANAGER: loading tasks from Repository ...");
-        String storedTasks = Repository.getInstance().getString(RepositoryKey.STORED_TASKS);
+        Logger.log("TASK MANAGER: loading tasks from Storage ...");
+        String storedTasks = Storage.getInstance().getString(StorageKey.STORED_TASKS);
         if (storedTasks != null) {
             JSONArray array;
             try {

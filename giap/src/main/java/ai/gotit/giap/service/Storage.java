@@ -8,28 +8,28 @@ import android.content.SharedPreferences.Editor;
 import ai.gotit.giap.constant.CommonConstant;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
 
-public class Repository {
-    private static Repository instance = null;
+public class Storage {
+    private static Storage instance = null;
     private SharedPreferences pref;
 
-    private Repository(Activity context) {
+    private Storage(Activity context) {
         // We use token in storage's name to prevent different projects using others's data
         String token = ConfigManager.getInstance().getToken();
         String sharedPreferencesName = CommonConstant.SHARED_PREFERENCES_PREFIX + token;
         pref = context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE);
     }
 
-    public static Repository initialize() {
+    public static Storage initialize() {
         if (instance != null) {
             throw new GIAPInstanceExistsException();
         }
 
         Activity context = ConfigManager.getInstance().getContext();
-        instance = new Repository(context);
+        instance = new Storage(context);
         return instance;
     }
 
-    public static Repository getInstance() {
+    public static Storage getInstance() {
         return instance;
     }
 

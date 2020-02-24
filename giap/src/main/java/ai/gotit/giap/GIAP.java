@@ -12,7 +12,7 @@ import ai.gotit.giap.service.DeviceInfoManager;
 import ai.gotit.giap.service.ExceptionHandler;
 import ai.gotit.giap.service.IdentityManager;
 import ai.gotit.giap.service.NetworkManager;
-import ai.gotit.giap.service.Repository;
+import ai.gotit.giap.service.Storage;
 import ai.gotit.giap.service.TaskManager;
 import ai.gotit.giap.support.GIAPActivityLifecycleCallbacks;
 import ai.gotit.giap.util.Logger;
@@ -62,7 +62,7 @@ public class GIAP {
         configManager.setServerUrl(serverUrl);
         configManager.setToken(token);
         registerGIAPActivityLifecycleCallbacks(context);
-        Repository.initialize();
+        Storage.initialize();
         DeviceInfoManager.initialize();
         NetworkManager.initialize();
         IdentityManager.initialize();
