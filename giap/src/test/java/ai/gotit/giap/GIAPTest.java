@@ -5,7 +5,6 @@ import android.app.Activity;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -40,43 +39,22 @@ import static org.mockito.Mockito.*;
         TaskManager.class,
 })
 public class GIAPTest {
-    private static final String serverUrl = "http://test.url";
-    private static final String token = "123456";
-    private static Activity context;
-    private static GIAP giap;
+    private final String serverUrl = "http://test.url";
+    private final String token = "123456";
+    private Activity context;
+    private GIAP giap;
 
     @Mock
-    private static TaskManager taskManager;
+    private TaskManager taskManager;
 
     @Mock
-    private static DeviceInfoManager deviceInfoManager;
+    private DeviceInfoManager deviceInfoManager;
 
     @Mock
-    private static IdentityManager identityManager;
+    private IdentityManager identityManager;
 
     @Rule
     public MockitoRule mockitoRule = MockitoJUnit.rule();
-
-    @BeforeClass
-    public static void beforeAll() {
-//        context = mock(Activity.class);
-//
-//        PowerMockito.spy(ExceptionHandler.class);
-//        PowerMockito.spy(Storage.class);
-//
-//        PowerMockito.mockStatic(DeviceInfoManager.class);
-//        when(DeviceInfoManager.getInstance()).thenReturn(deviceInfoManager);
-//
-//        PowerMockito.mockStatic(NetworkManager.class);
-//
-//        PowerMockito.mockStatic(IdentityManager.class);
-//        when(IdentityManager.getInstance()).thenReturn(identityManager);
-//
-//        PowerMockito.mockStatic(TaskManager.class);
-//        when(TaskManager.getInstance()).thenReturn(taskManager);
-//
-//        giap = GIAP.initialize(serverUrl, token, context);
-    }
 
     @Before
     public void beforeEach() {
@@ -96,14 +74,19 @@ public class GIAPTest {
         PowerMockito.mockStatic(TaskManager.class);
         when(TaskManager.getInstance()).thenReturn(taskManager);
 
-        if (GIAP.getInstance() == null) {
-            GIAP.initialize(serverUrl, token, context);
-        }
-        giap = GIAP.getInstance();
+        giap = GIAP.initialize(serverUrl, token, context);
     }
 
     @After
     public void afterEach() throws Exception {
+        TestHelper.resetSingleton(GIAP.class);
+        TestHelper.resetSingleton(ExceptionHandler.class);
+        TestHelper.resetSingleton(ConfigManager.class);
+        TestHelper.resetSingleton(Storage.class);
+        TestHelper.resetSingleton(DeviceInfoManager.class);
+        TestHelper.resetSingleton(NetworkManager.class);
+        TestHelper.resetSingleton(IdentityManager.class);
+        TestHelper.resetSingleton(TaskManager.class);
     }
 
     @Test
