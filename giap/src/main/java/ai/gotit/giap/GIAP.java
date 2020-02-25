@@ -47,6 +47,13 @@ import ai.gotit.giap.util.Logger;
 public class GIAP {
 
     private static GIAP instance = null;
+    private ExceptionHandler exceptionHandler;
+    private ConfigManager configManager;
+    private Storage storage;
+    private DeviceInfoManager deviceInfoManager;
+    private NetworkManager networkManager;
+    private IdentityManager identityManager;
+    private TaskManager taskManager;
 
     /**
      * @return Instance of GIAP. Should be called after GIAP.initialize()
@@ -56,17 +63,16 @@ public class GIAP {
     }
 
     private GIAP(String serverUrl, String token, Activity context) {
-        ExceptionHandler.initialize();
-        ConfigManager configManager = ConfigManager.getInstance();
-        configManager.setContext(context);
-        configManager.setServerUrl(serverUrl);
-        configManager.setToken(token);
+        exceptionHandler = new ExceptionHandler(GIAP.this);
+        configManager = new ConfigManager(context, serverUrl, token);
+        storage = new Storage(configManager);
+        deviceInfoManager = new DeviceInfoManager(configManager, storage);
+        networkManager = new NetworkManager(configManager);
+        identityManager = new IdentityManager(storage);
+        taskManager = new TaskManager(storage, identityManager, networkManager);
+
+        // Only called after initialized all services
         registerGIAPActivityLifecycleCallbacks(context);
-        Storage.initialize();
-        DeviceInfoManager.initialize();
-        NetworkManager.initialize();
-        IdentityManager.initialize();
-        TaskManager.initialize();
     }
 
     /**
@@ -79,21 +85,42 @@ public class GIAP {
      * @return Instance of GIAP
      */
     public static GIAP initialize(String serverUrl, String token, Activity context) {
-        if (instance != null) {
-            throw new GIAPInstanceExistsException();
+        if (instance == null) {
+            synchronized (GIAP.class) {
+                if (instance == null) {
+                    instance = new GIAP(serverUrl, token, context);
+                    return instance;
+                }
+            }
         }
-
-        instance = new GIAP(serverUrl, token, context);
-        return instance;
+        throw new GIAPInstanceExistsException();
     }
 
     private void registerGIAPActivityLifecycleCallbacks(Activity context) {
         if (context.getApplicationContext() instanceof Application) {
             final Application app = (Application) context.getApplicationContext();
-            GIAPActivityLifecycleCallbacks callbacks = new GIAPActivityLifecycleCallbacks();
+            GIAPActivityLifecycleCallbacks callbacks = new GIAPActivityLifecycleCallbacks(GIAP.this);
             app.registerActivityLifecycleCallbacks(callbacks);
         } else {
             Logger.warn("Context is not an Application. We won't be able to automatically flush on background.");
+        }
+    }
+
+    public void onUncaughtException() {
+        if (taskManager != null) {
+            taskManager.stop();
+        }
+    }
+
+    public void onPause() {
+        if (taskManager != null) {
+            taskManager.stop();
+        }
+    }
+
+    public void onResume() {
+        if (taskManager != null) {
+            taskManager.restart();
         }
     }
 
@@ -115,12 +142,10 @@ public class GIAP {
      */
     public void track(String eventName, JSONObject customProps) {
         Event event;
-        if (customProps == null) {
-            event = new Event(eventName);
-        } else {
-            event = new Event(eventName, customProps);
-        }
-        TaskManager.getInstance().createEventTask(event);
+        JSONObject deviceInfo = deviceInfoManager.getDeviceInfo();
+        String distinctId = identityManager.getDistinctId();
+        event = new Event(eventName, distinctId, deviceInfo, customProps);
+        taskManager.createEventTask(event);
     }
 
     /**
@@ -131,7 +156,7 @@ public class GIAP {
      * @param userId Unique user's id in the product (provided by sign-up action)
      */
     public void alias(String userId) {
-        TaskManager.getInstance().createAliasTask(userId);
+        taskManager.createAliasTask(userId);
     }
 
     /**
@@ -143,7 +168,7 @@ public class GIAP {
      * @param userId Unique user's id in the product (provided by log in action)
      */
     public void identify(String userId) {
-        TaskManager.getInstance().createIdentifyTask(userId);
+        taskManager.createIdentifyTask(userId);
     }
 
     /**
@@ -153,7 +178,7 @@ public class GIAP {
      * @param props Custom props as key-value (valid JSON object)
      */
     public void updateProfile(JSONObject props) {
-        TaskManager.getInstance().createUpdateProfileTask(props);
+        taskManager.createUpdateProfileTask(props);
     }
 
     /**
@@ -161,6 +186,6 @@ public class GIAP {
      * Should always be called after user take log out action.
      */
     public void reset() {
-        IdentityManager.getInstance().generateNewDistinctId();
+        identityManager.generateNewDistinctId();
     }
 }

@@ -10,35 +10,33 @@ import ai.gotit.giap.common.Serializable;
 import ai.gotit.giap.constant.CommonConstant;
 import ai.gotit.giap.constant.EventProps;
 import ai.gotit.giap.exception.GIAPInvalidPropsPrefixException;
-import ai.gotit.giap.service.DeviceInfoManager;
-import ai.gotit.giap.service.IdentityManager;
 import ai.gotit.giap.util.Logger;
 
 public class Event implements Serializable {
     private String name;
+    private String distinctId;
     private long time;
     private JSONObject customProps = new JSONObject();
     private JSONObject deviceInfo;
 
-    public Event(String name) {
-        this.name = name;
+    public Event(String name, String distinctId, JSONObject deviceInfo, JSONObject customProps) {
         updateTimestamp();
-        this.deviceInfo = DeviceInfoManager.getInstance().getDeviceInfo();
-    }
-
-    public Event(String name, JSONObject customProps) {
-        this(name);
-        Iterator<String> customPropsKeys = customProps.keys();
-        while (customPropsKeys.hasNext()) {
+        this.name = name;
+        this.distinctId = distinctId;
+        this.deviceInfo = deviceInfo;
+        if (customProps != null) {
             try {
-                String key = customPropsKeys.next();
-                Object value = customProps.get(key);
-                addCustomProp(key, value);
+                Iterator<String> customPropsKeys = customProps.keys();
+                while (customPropsKeys.hasNext()) {
+                    String key = customPropsKeys.next();
+                    Object value = customProps.get(key);
+                    addCustomProp(key, value);
+                }
+                this.customProps = customProps;
             } catch (JSONException e) {
                 Logger.error(e);
             }
         }
-        this.customProps = customProps;
     }
 
     public void updateTimestamp() {
@@ -58,24 +56,28 @@ public class Event implements Serializable {
 
     public JSONObject serialize() throws JSONException {
         JSONObject json = new JSONObject();
-        json.put(EventProps.DISTINCT_ID, IdentityManager.getInstance().getDistinctId());
+        json.put(EventProps.DISTINCT_ID, distinctId);
         json.put(EventProps.NAME, name);
         json.put(EventProps.TIME, time);
 
         // Append device's info
-        Iterator<String> deviceInfoKeys = deviceInfo.keys();
-        while (deviceInfoKeys.hasNext()) {
-            String key = deviceInfoKeys.next();
-            Object value = deviceInfo.get(key);
-            json.put(key, value);
+        if (deviceInfo != null) {
+            Iterator<String> deviceInfoKeys = deviceInfo.keys();
+            while (deviceInfoKeys.hasNext()) {
+                String key = deviceInfoKeys.next();
+                Object value = deviceInfo.get(key);
+                json.put(key, value);
+            }
         }
 
         // Append customProps
-        Iterator<String> customPropsKeys = customProps.keys();
-        while (customPropsKeys.hasNext()) {
-            String key = customPropsKeys.next();
-            Object value = customProps.get(key);
-            json.put(key, value);
+        if (customProps != null) {
+            Iterator<String> customPropsKeys = customProps.keys();
+            while (customPropsKeys.hasNext()) {
+                String key = customPropsKeys.next();
+                Object value = customProps.get(key);
+                json.put(key, value);
+            }
         }
 
         return json;

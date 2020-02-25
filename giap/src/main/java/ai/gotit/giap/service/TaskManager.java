@@ -25,37 +25,29 @@ import ai.gotit.giap.constant.StorageKey;
 import ai.gotit.giap.constant.TaskType;
 import ai.gotit.giap.entity.Event;
 import ai.gotit.giap.entity.Task;
-import ai.gotit.giap.exception.GIAPInstanceExistsException;
 import ai.gotit.giap.util.Logger;
 
 public class TaskManager {
-    private static TaskManager instance = null;
     private Queue<Task> taskQueue = new LinkedList<>();
     private Queue<Task> processingQueue = new LinkedList<>();
     private Boolean flushing = false;
     private Boolean started = false;
     private ScheduledExecutorService scheduler = null;
     private ScheduledFuture<?> scheduledJobHandler;
+    private Storage storage;
+    private IdentityManager identityManager;
+    private NetworkManager networkManager;
 
-    private TaskManager() {
+    public TaskManager(Storage storage, IdentityManager identityManager, NetworkManager networkManager) {
+        this.storage = storage;
+        this.identityManager = identityManager;
+        this.networkManager = networkManager;
+
         initScheduler();
         start();
     }
 
-    public static TaskManager initialize() {
-        if (instance != null) {
-            throw new GIAPInstanceExistsException();
-        }
-
-        instance = new TaskManager();
-        return instance;
-    }
-
-    public static TaskManager getInstance() {
-        return instance;
-    }
-
-    public void storeTasks() {
+    private void storeTasks() {
         Logger.log("TASK MANAGER: storing tasks into Storage ...");
         JSONArray array = new JSONArray();
         Queue<Task> clonedQueue = new LinkedList<>(taskQueue);
@@ -70,13 +62,13 @@ public class TaskManager {
             }
             array.put(serializedTask);
         }
-        Storage.getInstance().put(StorageKey.STORED_TASKS, array.toString());
+        storage.put(StorageKey.STORED_TASKS, array.toString());
         Logger.log("TASK MANAGER: storing has completed!");
     }
 
     private void loadStoredTasks() {
         Logger.log("TASK MANAGER: loading tasks from Storage ...");
-        String storedTasks = Storage.getInstance().getString(StorageKey.STORED_TASKS);
+        String storedTasks = storage.getString(StorageKey.STORED_TASKS);
         if (storedTasks != null) {
             JSONArray array;
             try {
@@ -112,7 +104,7 @@ public class TaskManager {
 
     public void createAliasTask(String userId) {
         JSONObject json = new JSONObject();
-        String distinctId = IdentityManager.getInstance().getDistinctId();
+        String distinctId = identityManager.getDistinctId();
         try {
             json.put(CommonProps.USER_ID, userId);
             json.put(CommonProps.DISTINCT_ID, distinctId);
@@ -123,12 +115,12 @@ public class TaskManager {
         Task task = new Task(TaskType.ALIAS, json);
         taskQueue.add(task);
         // TODO: aware of multi-thread -> new events still have chance to use old distinctId
-        IdentityManager.getInstance().updateDistinctId(userId);
+        identityManager.updateDistinctId(userId);
     }
 
     public void createIdentifyTask(String userId) {
         JSONObject json = new JSONObject();
-        String distinctId = IdentityManager.getInstance().getDistinctId();
+        String distinctId = identityManager.getDistinctId();
         try {
             json.put(CommonProps.USER_ID, userId);
             json.put(CommonProps.CURRENT_DISTINCT_ID, distinctId);
@@ -139,12 +131,12 @@ public class TaskManager {
         Task task = new Task(TaskType.IDENTIFY, json);
         taskQueue.add(task);
         // TODO: aware of multi-thread -> new events still have chance to use old distinctId
-        IdentityManager.getInstance().updateDistinctId(userId);
+        identityManager.updateDistinctId(userId);
     }
 
     public void createUpdateProfileTask(JSONObject props) {
         try {
-            String currentDistinctId = IdentityManager.getInstance().getDistinctId();
+            String currentDistinctId = identityManager.getDistinctId();
             props.put(CommonProps.CURRENT_DISTINCT_ID, currentDistinctId);
         } catch (JSONException e) {
             Logger.error(e);
@@ -252,7 +244,7 @@ public class TaskManager {
                     if (eventBatchSize > 0) {
                         Logger.log("FLUSHING: dequeue " + eventBatchSize + " events to the batch");
                         JSONArray bodyData = new JSONArray(eventBatch);
-                        NetworkManager.getInstance().track(
+                        networkManager.track(
                                 bodyData,
                                 createSuccessCallback(topTask.getType()),
                                 createErrorCallback()
@@ -267,7 +259,7 @@ public class TaskManager {
                     Logger.log("FLUSHING: try to flush alias task");
                     topTask.setProcessing(true);
                     processingQueue.poll();
-                    NetworkManager.getInstance().alias(
+                    networkManager.alias(
                             topTask.getData(),
                             createSuccessCallback(topTask.getType()),
                             createErrorCallback()
@@ -282,7 +274,7 @@ public class TaskManager {
                     try {
                         String userId = topTask.getData().getString(CommonProps.USER_ID);
                         String currentDistinctId = topTask.getData().getString(CommonProps.CURRENT_DISTINCT_ID);
-                        NetworkManager.getInstance().identify(
+                        networkManager.identify(
                                 userId,
                                 currentDistinctId,
                                 createSuccessCallback(topTask.getType()),
@@ -298,7 +290,7 @@ public class TaskManager {
                     Logger.log("FLUSHING: try to flush updateProfile task");
                     topTask.setProcessing(true);
                     processingQueue.poll();
-                    NetworkManager.getInstance().updateProfile(
+                    networkManager.updateProfile(
                             topTask.getData(),
                             createSuccessCallback(topTask.getType()),
                             createErrorCallback()
@@ -351,18 +343,17 @@ public class TaskManager {
             Logger.error("TASK MANAGER: scheduler not found (should not be). Can not start scheduling.");
             return;
         }
-        long tasksFlushingInterval = ConfigManager.getInstance().getTasksFlushingInterval();
         if (scheduledJobHandler != null && !scheduledJobHandler.isDone()) {
             Logger.warn("TASK MANAGER: scheduling failed! Previous scheduled job has not done yet!");
             return;
         }
         scheduledJobHandler = scheduler.scheduleAtFixedRate(
                 flush,
-                tasksFlushingInterval,
-                tasksFlushingInterval,
+                CommonConstant.TASKS_FLUSHING_INTERVAL,
+                CommonConstant.TASKS_FLUSHING_INTERVAL,
                 TimeUnit.SECONDS
         );
-        Logger.log("TASK MANAGER: scheduler has started. Flushing tasks every " + tasksFlushingInterval + " second(s).");
+        Logger.log("TASK MANAGER: scheduler has started. Flushing tasks every " + CommonConstant.TASKS_FLUSHING_INTERVAL + " second(s).");
     }
 
     public void start() {

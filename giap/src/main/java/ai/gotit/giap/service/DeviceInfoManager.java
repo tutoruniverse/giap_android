@@ -28,15 +28,18 @@ import java.util.UUID;
 import ai.gotit.giap.BuildConfig;
 import ai.gotit.giap.constant.DeviceInfoProps;
 import ai.gotit.giap.constant.StorageKey;
-import ai.gotit.giap.exception.GIAPInstanceExistsException;
 import ai.gotit.giap.util.Logger;
 
 public class DeviceInfoManager {
-    private static DeviceInfoManager instance = null;
     private Map<String, Object> staticProps = new HashMap<>();
+    private ConfigManager configManager;
+    private Storage storage;
 
-    private DeviceInfoManager() {
-        Activity context = ConfigManager.getInstance().getContext();
+    public DeviceInfoManager(ConfigManager configManager, Storage storage) {
+        this.configManager = configManager;
+        this.storage = storage;
+
+        Activity context = configManager.getContext();
         PackageManager packageManager = context.getPackageManager();
 
         // Get version's info
@@ -92,19 +95,6 @@ public class DeviceInfoManager {
         staticProps.put(DeviceInfoProps.GOOGLE_PLAY_SERVICES, getGooglePlayServices());
     }
 
-    public static DeviceInfoManager initialize() {
-        if (instance != null) {
-            throw new GIAPInstanceExistsException();
-        }
-
-        instance = new DeviceInfoManager();
-        return instance;
-    }
-
-    public static DeviceInfoManager getInstance() {
-        return instance;
-    }
-
     public JSONObject getDeviceInfo() {
         // Copy all static props
         JSONObject deviceInfo = new JSONObject(staticProps);
@@ -118,17 +108,17 @@ public class DeviceInfoManager {
     }
 
     private String getDeviceId() {
-        String deviceId = Storage.getInstance().getString(StorageKey.DEVICE_ID);
+        String deviceId = storage.getString(StorageKey.DEVICE_ID);
         if (deviceId == null) {
             deviceId = UUID.randomUUID().toString();
-            Storage.getInstance().put(StorageKey.DEVICE_ID, deviceId);
+            storage.put(StorageKey.DEVICE_ID, deviceId);
         }
         return deviceId;
     }
 
     private DisplayMetrics getScreenMetrics() {
         DisplayMetrics displayMetrics = new DisplayMetrics();
-        ConfigManager.getInstance()
+        configManager
                 .getContext()
                 .getWindowManager()
                 .getDefaultDisplay()
@@ -139,7 +129,7 @@ public class DeviceInfoManager {
     private String getCarrier() {
         String carrier = null;
 
-        TelephonyManager telephonyManager = (TelephonyManager) ConfigManager.getInstance()
+        TelephonyManager telephonyManager = (TelephonyManager) configManager
                 .getContext()
                 .getSystemService(Context.TELEPHONY_SERVICE);
         if (null != telephonyManager) {
@@ -151,7 +141,7 @@ public class DeviceInfoManager {
 
     private String getBluetoothVersion() {
         String bluetoothVersion = null;
-        PackageManager packageManager = ConfigManager.getInstance()
+        PackageManager packageManager = configManager
                 .getContext()
                 .getPackageManager();
         if (packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
@@ -166,8 +156,9 @@ public class DeviceInfoManager {
         String googlePlayServices = null;
         try {
             try {
-                Activity context = ConfigManager.getInstance().getContext();
-                final int servicesAvailable = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context);
+                final int servicesAvailable = GoogleApiAvailability
+                        .getInstance()
+                        .isGooglePlayServicesAvailable(configManager.getContext());
                 switch (servicesAvailable) {
                     case ConnectionResult.SUCCESS:
                         googlePlayServices = "available";
@@ -197,7 +188,7 @@ public class DeviceInfoManager {
     @SuppressLint("MissingPermission")
     @SuppressWarnings("MissingPermission")
     private Boolean isWifiConnected() {
-        Activity context = ConfigManager.getInstance().getContext();
+        Activity context = configManager.getContext();
         Boolean wifiConnected = null;
         if (PackageManager.PERMISSION_GRANTED == context.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
             ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -214,7 +205,7 @@ public class DeviceInfoManager {
     @SuppressLint("MissingPermission")
     @SuppressWarnings("MissingPermission")
     private Boolean isBluetoothEnabled() {
-        Activity context = ConfigManager.getInstance().getContext();
+        Activity context = configManager.getContext();
         Boolean isBluetoothEnabled = null;
         try {
             PackageManager pm = context.getPackageManager();

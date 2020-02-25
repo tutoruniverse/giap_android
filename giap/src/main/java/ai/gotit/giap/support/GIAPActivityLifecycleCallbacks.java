@@ -4,11 +4,16 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
 
-import ai.gotit.giap.service.TaskManager;
+import ai.gotit.giap.GIAP;
 import ai.gotit.giap.util.Logger;
 
 public class GIAPActivityLifecycleCallbacks implements Application.ActivityLifecycleCallbacks {
     private boolean isBackground = false;
+    private GIAP giapInstance;
+
+    public GIAPActivityLifecycleCallbacks(GIAP giapInstance) {
+        this.giapInstance = giapInstance;
+    }
 
     @Override
     public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
@@ -23,20 +28,14 @@ public class GIAPActivityLifecycleCallbacks implements Application.ActivityLifec
     public void onActivityPaused(Activity activity) {
         isBackground = true;
         Logger.log("LIFECYCLE: foreground -> background");
-        TaskManager taskManager = TaskManager.getInstance();
-        if (taskManager != null) {
-            taskManager.stop();
-        }
+        giapInstance.onPause();
     }
 
     @Override
     public void onActivityResumed(Activity activity) {
         if (isBackground) {
             Logger.log("LIFECYCLE: background -> foreground");
-            TaskManager taskManager = TaskManager.getInstance();
-            if (taskManager != null) {
-                taskManager.restart();
-            }
+            giapInstance.onResume();
         }
         isBackground = false;
     }

@@ -1,31 +1,21 @@
 package ai.gotit.giap.service;
 
-public class ExceptionHandler implements Thread.UncaughtExceptionHandler {
-    private static final int SLEEP_TIMEOUT_MS = 400;
-    private static ExceptionHandler instance;
-    private final Thread.UncaughtExceptionHandler defaultExceptionHandler;
+import ai.gotit.giap.GIAP;
 
-    private ExceptionHandler() {
+public class ExceptionHandler implements Thread.UncaughtExceptionHandler {
+    private final int SLEEP_TIMEOUT_MS = 400;
+    private final Thread.UncaughtExceptionHandler defaultExceptionHandler;
+    private GIAP giapInstance;
+
+    public ExceptionHandler(GIAP giapInstance) {
+        this.giapInstance = giapInstance;
         defaultExceptionHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(this);
     }
 
-    public static void initialize() {
-        if (instance == null) {
-            synchronized (ExceptionHandler.class) {
-                if (instance == null) {
-                    instance = new ExceptionHandler();
-                }
-            }
-        }
-    }
-
     @Override
     public void uncaughtException(final Thread t, final Throwable e) {
-        TaskManager taskManager = TaskManager.getInstance();
-        if (taskManager != null) {
-            taskManager.stop();
-        }
+        giapInstance.onUncaughtException();
 
         if (defaultExceptionHandler != null) {
             defaultExceptionHandler.uncaughtException(t, e);

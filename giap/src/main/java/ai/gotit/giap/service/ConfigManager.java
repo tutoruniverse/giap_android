@@ -2,23 +2,18 @@ package ai.gotit.giap.service;
 
 import android.app.Activity;
 
-import ai.gotit.giap.constant.DefaultConfig;
-
 public class ConfigManager {
-    private static ConfigManager instance = null;
     private Activity context = null;
     private String serverUrl = null;
     private String token = null;
-    private long tasksFlushingInterval = DefaultConfig.TASKS_FLUSHING_INTERVAL;
 
-    private ConfigManager() {
+    public ConfigManager() {
     }
 
-    public static ConfigManager getInstance() {
-        if (instance == null) {
-            instance = new ConfigManager();
-        }
-        return instance;
+    public ConfigManager(Activity context, String serverUrl, String token) {
+        this.context = context;
+        this.serverUrl = serverUrl;
+        this.token = token;
     }
 
     public Activity getContext() {
@@ -43,18 +38,5 @@ public class ConfigManager {
 
     public void setToken(String token) {
         this.token = token;
-    }
-
-    public long getTasksFlushingInterval() {
-        return tasksFlushingInterval;
-    }
-
-    /**
-     * Only take effect after the TaskManager restart its scheduler.
-     *
-     * @param tasksFlushingInterval period in second between 2 flushing action
-     */
-    public void setTasksFlushingInterval(long tasksFlushingInterval) {
-        this.tasksFlushingInterval = tasksFlushingInterval;
     }
 }

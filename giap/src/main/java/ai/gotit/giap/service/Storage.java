@@ -6,31 +6,16 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 
 import ai.gotit.giap.constant.CommonConstant;
-import ai.gotit.giap.exception.GIAPInstanceExistsException;
 
 public class Storage {
-    private static Storage instance = null;
     private SharedPreferences pref;
 
-    private Storage(Activity context) {
+    public Storage(ConfigManager configManager) {
         // We use token in storage's name to prevent different projects using others's data
-        String token = ConfigManager.getInstance().getToken();
+        String token = configManager.getToken();
+        Activity context = configManager.getContext();
         String sharedPreferencesName = CommonConstant.SHARED_PREFERENCES_PREFIX + token;
         pref = context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE);
-    }
-
-    public static Storage initialize() {
-        if (instance != null) {
-            throw new GIAPInstanceExistsException();
-        }
-
-        Activity context = ConfigManager.getInstance().getContext();
-        instance = new Storage(context);
-        return instance;
-    }
-
-    public static Storage getInstance() {
-        return instance;
     }
 
     public void put(String key, String value) {

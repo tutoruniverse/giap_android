@@ -1,6 +1,5 @@
 package ai.gotit.giap.service;
 
-import android.app.Activity;
 import android.net.Uri;
 
 import com.android.volley.Request;
@@ -18,35 +17,22 @@ import java.util.HashMap;
 import java.util.Map;
 
 import ai.gotit.giap.constant.CommonProps;
-import ai.gotit.giap.exception.GIAPInstanceExistsException;
 import ai.gotit.giap.util.Logger;
 import androidx.annotation.Nullable;
 
 public class NetworkManager {
-    private static NetworkManager instance = null;
     private RequestQueue requestQueue;
+    private ConfigManager configManager;
 
-    private NetworkManager(Activity context) {
-        requestQueue = Volley.newRequestQueue(context);
-    }
+    public NetworkManager(ConfigManager configManager) {
+        this.configManager = configManager;
 
-    public static NetworkManager initialize() {
-        if (instance != null) {
-            throw new GIAPInstanceExistsException();
-        }
-
-        Activity context = ConfigManager.getInstance().getContext();
-        instance = new NetworkManager(context);
-        return instance;
-    }
-
-    public static NetworkManager getInstance() {
-        return instance;
+        requestQueue = Volley.newRequestQueue(configManager.getContext());
     }
 
     private void request(final int method, String endpoint, Map<String, String> params, @Nullable JSONObject body, Listener<JSONObject> callback, ErrorListener errorCallback) {
         Uri.Builder builder = new Uri.Builder();
-        String serverUrl = ConfigManager.getInstance().getServerUrl();
+        String serverUrl = configManager.getServerUrl();
         if (!serverUrl.startsWith("http")) {
             builder.scheme("https");
             builder.encodedAuthority(serverUrl);
@@ -64,7 +50,7 @@ public class NetworkManager {
             @Override
             public Map<String, String> getHeaders() {
                 Map<String, String> params = new HashMap<>();
-                params.put("Authorization", "Bearer " + ConfigManager.getInstance().getToken());
+                params.put("Authorization", "Bearer " + configManager.getToken());
                 if (method != Method.GET) {
                     params.put("Content-Type", "application/json");
                 }
