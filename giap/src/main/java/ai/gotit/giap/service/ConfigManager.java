@@ -16,6 +16,10 @@ public class ConfigManager {
         this.token = token;
     }
 
+    public static ConfigManager makeInstance(Activity context, String serverUrl, String token) {
+        return new ConfigManager(context, serverUrl, token);
+    }
+
     public Activity getContext() {
         return context;
     }

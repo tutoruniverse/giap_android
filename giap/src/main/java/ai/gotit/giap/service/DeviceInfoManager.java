@@ -95,6 +95,10 @@ public class DeviceInfoManager {
         staticProps.put(DeviceInfoProps.GOOGLE_PLAY_SERVICES, getGooglePlayServices());
     }
 
+    public static DeviceInfoManager makeInstance(ConfigManager configManager, Storage storage) {
+        return new DeviceInfoManager(configManager, storage);
+    }
+
     public JSONObject getDeviceInfo() {
         // Copy all static props
         JSONObject deviceInfo = new JSONObject(staticProps);

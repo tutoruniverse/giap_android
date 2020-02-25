@@ -19,6 +19,10 @@ public class IdentityManager {
         }
     }
 
+    public static IdentityManager makeInstance(Storage storage) {
+        return new IdentityManager(storage);
+    }
+
     public String getDistinctId() {
         return distinctId;
     }

@@ -30,6 +30,10 @@ public class NetworkManager {
         requestQueue = Volley.newRequestQueue(configManager.getContext());
     }
 
+    public static NetworkManager makeInstance(ConfigManager configManager) {
+        return new NetworkManager(configManager);
+    }
+
     private void request(final int method, String endpoint, Map<String, String> params, @Nullable JSONObject body, Listener<JSONObject> callback, ErrorListener errorCallback) {
         Uri.Builder builder = new Uri.Builder();
         String serverUrl = configManager.getServerUrl();
