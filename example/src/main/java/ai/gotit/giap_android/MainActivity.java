@@ -37,8 +37,8 @@ public class MainActivity extends AppCompatActivity {
         setAuthState(false);
 
         final GIAP giap = GIAP.initialize(
-                "http://13.250.58.88",
-                "eric",
+                "https://analytics-api.got-it.io",
+                "demo",
                 MainActivity.this
         );
 
