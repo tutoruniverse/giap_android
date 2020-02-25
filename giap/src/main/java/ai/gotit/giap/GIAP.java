@@ -62,14 +62,16 @@ public class GIAP {
         return instance;
     }
 
+    public GIAP() {}
+
     private GIAP(String serverUrl, String token, Activity context) {
-        exceptionHandler = new ExceptionHandler(GIAP.this);
-        configManager = new ConfigManager(context, serverUrl, token);
-        storage = new Storage(configManager);
-        deviceInfoManager = new DeviceInfoManager(configManager, storage);
-        networkManager = new NetworkManager(configManager);
-        identityManager = new IdentityManager(storage);
-        taskManager = new TaskManager(storage, identityManager, networkManager);
+        exceptionHandler = ExceptionHandler.makeInstance(GIAP.this);
+        configManager = ConfigManager.makeInstance(context, serverUrl, token);
+        storage = Storage.makeInstance(configManager);
+        deviceInfoManager = DeviceInfoManager.makeInstance(configManager, storage);
+        networkManager = NetworkManager.makeInstance(configManager);
+        identityManager = IdentityManager.makeInstance(storage);
+        taskManager = TaskManager.makeInstance(storage, identityManager, networkManager);
 
         // Only called after initialized all services
         registerGIAPActivityLifecycleCallbacks(context);

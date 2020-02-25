@@ -47,6 +47,10 @@ public class TaskManager {
         start();
     }
 
+    public static TaskManager makeInstance(Storage storage, IdentityManager identityManager, NetworkManager networkManager) {
+        return new TaskManager(storage, identityManager, networkManager);
+    }
+
     private void storeTasks() {
         Logger.log("TASK MANAGER: storing tasks into Storage ...");
         JSONArray array = new JSONArray();

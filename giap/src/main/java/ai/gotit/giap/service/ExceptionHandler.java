@@ -13,6 +13,10 @@ public class ExceptionHandler implements Thread.UncaughtExceptionHandler {
         Thread.setDefaultUncaughtExceptionHandler(this);
     }
 
+    public static ExceptionHandler makeInstance(GIAP giapInstance) {
+        return new ExceptionHandler(giapInstance);
+    }
+
     @Override
     public void uncaughtException(final Thread t, final Throwable e) {
         giapInstance.onUncaughtException();

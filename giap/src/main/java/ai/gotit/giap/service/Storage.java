@@ -18,6 +18,10 @@ public class Storage {
         pref = context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE);
     }
 
+    public static Storage makeInstance(ConfigManager configManager) {
+        return new Storage(configManager);
+    }
+
     public void put(String key, String value) {
         Editor editor = pref.edit();
         editor.putString(key, value);

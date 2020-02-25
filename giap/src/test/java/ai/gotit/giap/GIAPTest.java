@@ -5,6 +5,7 @@ import android.app.Activity;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,12 +27,19 @@ import ai.gotit.giap.service.NetworkManager;
 import ai.gotit.giap.service.Storage;
 import ai.gotit.giap.service.TaskManager;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
         ExceptionHandler.class,
+        ConfigManager.class,
         Storage.class,
         DeviceInfoManager.class,
         NetworkManager.class,
@@ -45,48 +53,65 @@ public class GIAPTest {
     private GIAP giap;
 
     @Mock
-    private TaskManager taskManager;
-
+    private ExceptionHandler exceptionHandler;
+    @Mock
+    private ConfigManager configManager;
+    @Mock
+    private Storage storage;
     @Mock
     private DeviceInfoManager deviceInfoManager;
-
+    @Mock
+    private NetworkManager networkManager;
     @Mock
     private IdentityManager identityManager;
+    @Mock
+    private TaskManager taskManager;
 
     @Rule
     public MockitoRule mockitoRule = MockitoJUnit.rule();
 
+    @BeforeClass
+    public static void beforeAll() {
+    }
+
     @Before
-    public void beforeEach() {
+    public void beforeEach() throws Exception {
         context = mock(Activity.class);
 
-        PowerMockito.spy(ExceptionHandler.class);
-        PowerMockito.spy(Storage.class);
+        PowerMockito.mockStatic(ExceptionHandler.class);
+        when(ExceptionHandler.makeInstance(any(GIAP.class)))
+                .thenReturn(exceptionHandler);
+
+        PowerMockito.mockStatic(ConfigManager.class);
+        when(ConfigManager.makeInstance(any(Activity.class), anyString(), anyString()))
+                .thenReturn(configManager);
+
+        PowerMockito.mockStatic(Storage.class);
+        when(Storage.makeInstance(any(ConfigManager.class)))
+                .thenReturn(storage);
 
         PowerMockito.mockStatic(DeviceInfoManager.class);
-        when(DeviceInfoManager.getInstance()).thenReturn(deviceInfoManager);
+        when(DeviceInfoManager.makeInstance(any(ConfigManager.class), any(Storage.class)))
+                .thenReturn(deviceInfoManager);
 
         PowerMockito.mockStatic(NetworkManager.class);
+        when(NetworkManager.makeInstance(any(ConfigManager.class)))
+                .thenReturn(networkManager);
 
         PowerMockito.mockStatic(IdentityManager.class);
-        when(IdentityManager.getInstance()).thenReturn(identityManager);
+        when(IdentityManager.makeInstance(any(Storage.class)))
+                .thenReturn(identityManager);
 
         PowerMockito.mockStatic(TaskManager.class);
-        when(TaskManager.getInstance()).thenReturn(taskManager);
+        when(TaskManager.makeInstance(any(Storage.class), any(IdentityManager.class), any(NetworkManager.class)))
+                .thenReturn(taskManager);
 
-        giap = GIAP.initialize(serverUrl, token, context);
+        giap = GIAP.initialize(serverUrl, serverUrl, context);
     }
 
     @After
     public void afterEach() throws Exception {
         TestHelper.resetSingleton(GIAP.class);
-        TestHelper.resetSingleton(ExceptionHandler.class);
-        TestHelper.resetSingleton(ConfigManager.class);
-        TestHelper.resetSingleton(Storage.class);
-        TestHelper.resetSingleton(DeviceInfoManager.class);
-        TestHelper.resetSingleton(NetworkManager.class);
-        TestHelper.resetSingleton(IdentityManager.class);
-        TestHelper.resetSingleton(TaskManager.class);
     }
 
     @Test
@@ -102,23 +127,25 @@ public class GIAPTest {
 
         // Should initialized all services
         PowerMockito.verifyStatic(ExceptionHandler.class, times(1));
-        ExceptionHandler.initialize();
-        PowerMockito.verifyStatic(Storage.class, times(1));
-        Storage.initialize();
-        PowerMockito.verifyStatic(DeviceInfoManager.class, times(1));
-        DeviceInfoManager.initialize();
-        PowerMockito.verifyStatic(NetworkManager.class, times(1));
-        NetworkManager.initialize();
-        PowerMockito.verifyStatic(IdentityManager.class, times(1));
-        IdentityManager.initialize();
-        PowerMockito.verifyStatic(TaskManager.class, times(1));
-        TaskManager.initialize();
+        ExceptionHandler.makeInstance(any(GIAP.class));
 
-        // Should set configs
-        ConfigManager configManager = ConfigManager.getInstance();
-        assertEquals(configManager.getServerUrl(), serverUrl);
-        assertEquals(configManager.getToken(), token);
-        assertEquals(configManager.getContext(), context);
+        PowerMockito.verifyStatic(ConfigManager.class, times(1));
+        ConfigManager.makeInstance(any(Activity.class), anyString(), anyString());
+
+        PowerMockito.verifyStatic(Storage.class, times(1));
+        Storage.makeInstance(any(ConfigManager.class));
+
+        PowerMockito.verifyStatic(DeviceInfoManager.class, times(1));
+        DeviceInfoManager.makeInstance(any(ConfigManager.class), any(Storage.class));
+
+        PowerMockito.verifyStatic(NetworkManager.class, times(1));
+        NetworkManager.makeInstance(any(ConfigManager.class));
+
+        PowerMockito.verifyStatic(IdentityManager.class, times(1));
+        IdentityManager.makeInstance(any(Storage.class));
+
+        PowerMockito.verifyStatic(TaskManager.class, times(1));
+        TaskManager.makeInstance(any(Storage.class), any(IdentityManager.class), any(NetworkManager.class));
     }
 
     @Test
@@ -162,5 +189,23 @@ public class GIAPTest {
     public void reset() {
         giap.reset();
         verify(identityManager, times(1)).generateNewDistinctId();
+    }
+
+    @Test
+    public void onUncaughtException() {
+        giap.onUncaughtException();
+        verify(taskManager, times(1)).stop();
+    }
+
+    @Test
+    public void onPause() {
+        giap.onPause();
+        verify(taskManager, times(1)).stop();
+    }
+
+    @Test
+    public void onResume() {
+        giap.onResume();
+        verify(taskManager, times(1)).restart();
     }
 }
