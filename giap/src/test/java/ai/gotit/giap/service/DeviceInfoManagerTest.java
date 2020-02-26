@@ -20,11 +20,22 @@ import java.util.Map;
 
 import ai.gotit.giap.constant.DeviceInfoProps;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class DeviceInfoManagerTest {
     private DeviceInfoManager deviceInfoManager;
+    private ConfigManager configManager;
+    private Storage storage;
 
     @Before
     public void setUp() throws Exception {
@@ -68,14 +79,16 @@ public class DeviceInfoManagerTest {
         when(context.getSystemService(Context.TELEPHONY_SERVICE)).thenReturn(telephonyManager);
         when(telephonyManager.getNetworkOperatorName()).thenReturn("carrier name");
 
-        ConfigManager configManager = ConfigManager.makeInstance(context, "123", "456");
-        Storage storage = mock(Storage.class);
+        configManager = ConfigManager.makeInstance(context, "123", "456");
+        storage = mock(Storage.class);
 
         deviceInfoManager = spy(DeviceInfoManager.makeInstance(configManager, storage));
     }
 
     @Test
     public void makeInstance() {
+        DeviceInfoManager newInstance = DeviceInfoManager.makeInstance(configManager, storage);
+        assertNotSame(newInstance, deviceInfoManager);
     }
 
     @Test
