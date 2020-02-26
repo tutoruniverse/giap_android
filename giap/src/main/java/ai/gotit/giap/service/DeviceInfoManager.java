@@ -29,6 +29,7 @@ import ai.gotit.giap.BuildConfig;
 import ai.gotit.giap.constant.DeviceInfoProps;
 import ai.gotit.giap.constant.StorageKey;
 import ai.gotit.giap.util.Logger;
+import androidx.annotation.VisibleForTesting;
 
 public class DeviceInfoManager {
     private Map<String, Object> staticProps = new HashMap<>();
@@ -100,15 +101,28 @@ public class DeviceInfoManager {
     }
 
     public JSONObject getDeviceInfo() {
+        Map<String, Object> props = getDeviceInfoAsMap();
+
+        return new JSONObject(props);
+    }
+
+    /**
+     * Support testing
+     */
+    Map<String, Object> getDeviceInfoAsMap() {
         // Copy all static props
-        JSONObject deviceInfo = new JSONObject(staticProps);
-        try {
-            deviceInfo.put(DeviceInfoProps.WIFI, isWifiConnected());
-            deviceInfo.put(DeviceInfoProps.BLUETOOTH_ENABLED, isBluetoothEnabled());
-        } catch (JSONException e) {
-            Logger.error(e);
-        }
-        return deviceInfo;
+        Map<String, Object> props = new HashMap<>(staticProps);
+        props.put(DeviceInfoProps.WIFI, isWifiConnected());
+        props.put(DeviceInfoProps.BLUETOOTH_ENABLED, isBluetoothEnabled());
+        return props;
+    }
+
+    /**
+     * For testing
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    Map<String, Object> getStaticProps() {
+        return staticProps;
     }
 
     private String getDeviceId() {

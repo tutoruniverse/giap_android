@@ -1,11 +1,9 @@
-package ai.gotit.giap;
+package ai.gotit.giap.service;
 
 import android.app.Activity;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import ai.gotit.giap.service.ConfigManager;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
