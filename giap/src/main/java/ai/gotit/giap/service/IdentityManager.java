@@ -27,9 +27,10 @@ public class IdentityManager {
         return distinctId;
     }
 
-    public void generateNewDistinctId() {
+    public String generateNewDistinctId() {
         distinctId = UUID.randomUUID().toString();
         updateDistinctId(distinctId);
+        return distinctId;
     }
 
     public void updateDistinctId(String distinctId) {
