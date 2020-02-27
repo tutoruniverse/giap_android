@@ -1,5 +1,7 @@
 package ai.gotit.giap.entity;
 
+import androidx.annotation.VisibleForTesting;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -15,7 +17,7 @@ import ai.gotit.giap.util.Logger;
 public class Event implements Serializable {
     private String name;
     private String distinctId;
-    private long time;
+    private Long time;
     private JSONObject customProps = new JSONObject();
     private JSONObject deviceInfo;
 
@@ -81,5 +83,10 @@ public class Event implements Serializable {
         }
 
         return json;
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    long getTime() {
+        return time;
     }
 }
