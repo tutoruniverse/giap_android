@@ -1,5 +1,7 @@
 package ai.gotit.giap.service;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.android.volley.NoConnectionError;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -33,7 +35,7 @@ public class TaskManager {
     private Boolean flushing = false;
     private Boolean started = false;
     private ScheduledExecutorService scheduler = null;
-    private ScheduledFuture<?> scheduledJobHandler;
+    private ScheduledFuture<?> scheduledJobHandler = null;
     private Storage storage;
     private IdentityManager identityManager;
     private NetworkManager networkManager;
@@ -342,7 +344,8 @@ public class TaskManager {
         };
     }
 
-    private void startScheduling() {
+    @VisibleForTesting
+    void startScheduling() {
         if (scheduler == null) {
             Logger.error("TASK MANAGER: scheduler not found (should not be). Can not start scheduling.");
             return;
@@ -390,5 +393,15 @@ public class TaskManager {
         }
         storeTasks();
         started = false;
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    boolean hasStarted() {
+        return started;
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    Queue<Task> getTaskQueue() {
+        return taskQueue;
     }
 }

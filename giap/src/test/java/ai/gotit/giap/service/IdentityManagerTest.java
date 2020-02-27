@@ -25,12 +25,12 @@ public class IdentityManagerTest {
     public void constructor_DistinctId_NotExisted() {
         when(storage.getString(StorageKey.DISTINCT_ID)).thenReturn(null);
         identityManager = spy(IdentityManager.makeInstance(storage));
-        verify(identityManager, times(0)).generateNewDistinctId();
+        assertNotEquals(savedDistinctId, identityManager.getDistinctId());
     }
 
     @Test
     public void constructor_DistinctId_Existed() {
-        verify(identityManager, times(0)).generateNewDistinctId();
+        assertEquals(savedDistinctId, identityManager.getDistinctId());
     }
 
     @Test

@@ -62,7 +62,8 @@ public class GIAP {
         return instance;
     }
 
-    public GIAP() {}
+    public GIAP() {
+    }
 
     private GIAP(String serverUrl, String token, Activity context) {
         exceptionHandler = ExceptionHandler.makeInstance(GIAP.this);

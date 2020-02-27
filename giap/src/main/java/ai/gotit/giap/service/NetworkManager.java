@@ -2,6 +2,8 @@ package ai.gotit.giap.service;
 
 import android.net.Uri;
 
+import androidx.annotation.Nullable;
+
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response.ErrorListener;
@@ -18,7 +20,6 @@ import java.util.Map;
 
 import ai.gotit.giap.constant.CommonProps;
 import ai.gotit.giap.util.Logger;
-import androidx.annotation.Nullable;
 
 public class NetworkManager {
     private RequestQueue requestQueue;
