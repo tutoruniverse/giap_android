@@ -1,0 +1,2 @@
+include ':example', ':giap'
+rootProject.name='GIAP_android'
