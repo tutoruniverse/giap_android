@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Bundle;
 
+import androidx.annotation.VisibleForTesting;
+
 import ai.gotit.giap.GIAP;
 import ai.gotit.giap.util.Logger;
 
@@ -52,5 +54,10 @@ public class GIAPActivityLifecycleCallbacks implements Application.ActivityLifec
     @Override
     public void onActivityDestroyed(Activity activity) {
         Logger.log("LIFECYCLE: destroyed");
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    boolean getBackground() {
+        return isBackground;
     }
 }
