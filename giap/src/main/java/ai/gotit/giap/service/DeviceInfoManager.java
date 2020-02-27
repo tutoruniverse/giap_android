@@ -13,10 +13,11 @@ import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.InvocationTargetException;
@@ -29,7 +30,6 @@ import ai.gotit.giap.BuildConfig;
 import ai.gotit.giap.constant.DeviceInfoProps;
 import ai.gotit.giap.constant.StorageKey;
 import ai.gotit.giap.util.Logger;
-import androidx.annotation.VisibleForTesting;
 
 public class DeviceInfoManager {
     private Map<String, Object> staticProps = new HashMap<>();

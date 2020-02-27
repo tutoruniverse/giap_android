@@ -1,7 +1,8 @@
 package ai.gotit.giap.service;
 
-import ai.gotit.giap.GIAP;
 import androidx.annotation.VisibleForTesting;
+
+import ai.gotit.giap.GIAP;
 
 public class ExceptionHandler implements Thread.UncaughtExceptionHandler {
     private final int SLEEP_TIMEOUT_MS = 400;
