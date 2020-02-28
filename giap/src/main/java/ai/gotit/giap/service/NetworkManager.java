@@ -8,6 +8,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
+import com.android.volley.toolbox.BaseHttpStack;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -20,6 +21,7 @@ import java.util.Map;
 
 import ai.gotit.giap.constant.CommonProps;
 import ai.gotit.giap.util.Logger;
+import androidx.annotation.VisibleForTesting;
 
 public class NetworkManager {
     private RequestQueue requestQueue;
@@ -29,6 +31,13 @@ public class NetworkManager {
         this.configManager = configManager;
 
         requestQueue = Volley.newRequestQueue(configManager.getContext());
+    }
+
+    @VisibleForTesting
+    NetworkManager(ConfigManager configManager, BaseHttpStack stack) {
+        this.configManager = configManager;
+
+        requestQueue = Volley.newRequestQueue(configManager.getContext(), stack);
     }
 
     public static NetworkManager makeInstance(ConfigManager configManager) {
