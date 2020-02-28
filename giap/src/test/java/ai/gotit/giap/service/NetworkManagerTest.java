@@ -2,8 +2,18 @@ package ai.gotit.giap.service;
 
 import android.app.Activity;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.toolbox.BaseHttpStack;
+import com.android.volley.toolbox.HttpResponse;
+
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.util.Map;
+
+import ai.gotit.giap.mock.MockHttpStack;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -20,7 +30,9 @@ public class NetworkManagerTest {
         configManager.setToken("456");
         configManager.setContext(mock(Activity.class));
 
-        networkManager = spy(NetworkManager.makeInstance(configManager));
+        BaseHttpStack stack = new MockHttpStack();
+
+        networkManager = spy(new NetworkManager(configManager, stack));
     }
 
     @Test
