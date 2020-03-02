@@ -48,6 +48,9 @@ public class MainActivity extends AppCompatActivity {
                 showTextInputDialog(InputType.TYPE_CLASS_TEXT, "User ID", new OnSubmitDialogListener() {
                     @Override
                     public void onSubmit(String text) {
+                        if (text.equals("")) {
+                            return;
+                        }
                         giap.identify(text);
                         setAuthState(true);
                     }
@@ -61,6 +64,9 @@ public class MainActivity extends AppCompatActivity {
                 showSignUpDialog(new SignUpDialogFragment.OnSubmitListener() {
                     @Override
                     public void onSubmit(String userId, String email) {
+                        if (userId.equals("") || email.equals("")) {
+                            return;
+                        }
                         try {
                             JSONObject props = new JSONObject();
                             props.put("email", email);
@@ -82,6 +88,9 @@ public class MainActivity extends AppCompatActivity {
                 showTextInputDialog(InputType.TYPE_CLASS_NUMBER, "Economy group", new OnSubmitDialogListener() {
                     @Override
                     public void onSubmit(String text) {
+                        if (text.equals("")) {
+                            return;
+                        }
                         try {
                             JSONObject props = new JSONObject();
                             props.put("economy_group", Integer.parseInt(text, 10));
@@ -101,6 +110,9 @@ public class MainActivity extends AppCompatActivity {
                 showTextInputDialog(InputType.TYPE_CLASS_TEXT, "Problem text", new OnSubmitDialogListener() {
                     @Override
                     public void onSubmit(String text) {
+                        if (text.equals("")) {
+                            return;
+                        }
                         try {
                             JSONObject props = new JSONObject();
                             props.put("problem_text", text);
@@ -120,6 +132,9 @@ public class MainActivity extends AppCompatActivity {
                 showTextInputDialog(InputType.TYPE_CLASS_TEXT, "Full name", new OnSubmitDialogListener() {
                     @Override
                     public void onSubmit(String text) {
+                        if (text.equals("")) {
+                            return;
+                        }
                         try {
                             JSONObject props = new JSONObject();
                             props.put("full_name", text);
