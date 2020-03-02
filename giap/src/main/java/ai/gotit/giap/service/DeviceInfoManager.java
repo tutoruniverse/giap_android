@@ -76,7 +76,7 @@ public class DeviceInfoManager {
         }
 
         staticProps.put(DeviceInfoProps.DEVICE_ID, getDeviceId());
-        staticProps.put(DeviceInfoProps.OS, "android");
+        staticProps.put(DeviceInfoProps.OS, "Android");
         staticProps.put(DeviceInfoProps.LIB, "GIAP-android");
         staticProps.put(DeviceInfoProps.LIB_VERSION, BuildConfig.VERSION_NAME);
         DisplayMetrics displayMetrics = getScreenMetrics();
