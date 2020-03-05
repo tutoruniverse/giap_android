@@ -94,6 +94,29 @@ try {
 }
 ```
 
+### Update profile properties atomically
+Increase/Decrease a numeric property
+
+```java
+giap.increaseProperty("count", 1);
+```
+Append new elements to a list property
+
+```java
+JSONArray array = new JSONArray();
+array.put("red");
+array.put("blue");
+giap.appendToProperty("tags", array);
+```
+Remove elements from a list property
+
+```java
+JSONArray array = new JSONArray();
+array.put("red");
+array.put("blue");
+giap.removeFromProperty("tags", array);
+```
+
 ### Reset
 
 Use this method right after user has just logged out. It will generate new distinct ID for new visitor.

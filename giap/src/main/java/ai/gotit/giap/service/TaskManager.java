@@ -152,6 +152,51 @@ public class TaskManager {
         taskQueue.add(task);
     }
 
+    public <T> void createIncreasePropertyTask(String propertyName, T value) {
+        JSONObject props = new JSONObject();
+        try {
+            props.put(CommonProps.PROPERTY_NAME, propertyName);
+            props.put(CommonProps.VALUE, value);
+            props.put(CommonProps.CURRENT_DISTINCT_ID, identityManager.getDistinctId());
+        } catch (JSONException e) {
+            Logger.error(e);
+            return;
+        }
+
+        Task task = new Task(TaskType.INCREASE_PROPERTY, props);
+        taskQueue.add(task);
+    }
+
+    public void createAppendToPropertyTask(String propertyName, JSONArray values) {
+        JSONObject props = new JSONObject();
+        try {
+            props.put(CommonProps.PROPERTY_NAME, propertyName);
+            props.put(CommonProps.VALUE, values);
+            props.put(CommonProps.CURRENT_DISTINCT_ID, identityManager.getDistinctId());
+        } catch (JSONException e) {
+            Logger.error(e);
+            return;
+        }
+
+        Task task = new Task(TaskType.APPEND_TO_PROPERTY, props);
+        taskQueue.add(task);
+    }
+
+    public void createRemoveFromPropertyTask(String propertyName, JSONArray values) {
+        JSONObject props = new JSONObject();
+        try {
+            props.put(CommonProps.PROPERTY_NAME, propertyName);
+            props.put(CommonProps.VALUE, values);
+            props.put(CommonProps.CURRENT_DISTINCT_ID, identityManager.getDistinctId());
+        } catch (JSONException e) {
+            Logger.error(e);
+            return;
+        }
+
+        Task task = new Task(TaskType.REMOVE_FROM_PROPERTY, props);
+        taskQueue.add(task);
+    }
+
     private List<JSONObject> dequeueEvents() {
         Logger.log("DEQUEUE: events");
         return dequeueEvents(new ArrayList<JSONObject>());
@@ -287,6 +332,8 @@ public class TaskManager {
                                 createErrorCallback()
                         );
                     } catch (JSONException e) {
+                        cleanUpProcessingTasks();
+                        finishFlushing();
                         Logger.error(e);
                     }
                     break;
@@ -301,6 +348,84 @@ public class TaskManager {
                             createSuccessCallback(topTask.getType()),
                             createErrorCallback()
                     );
+                    break;
+                }
+
+                case TaskType.INCREASE_PROPERTY: {
+                    Logger.log("FLUSHING: try to flush increaseProperty task");
+                    topTask.setProcessing(true);
+                    JSONObject data = topTask.getData();
+                    processingQueue.poll();
+
+                    try {
+                        if (data.get(CommonProps.VALUE) instanceof Integer) {
+                            networkManager.increaseProperty(
+                                    data.getString(CommonProps.CURRENT_DISTINCT_ID),
+                                    data.getString(CommonProps.PROPERTY_NAME),
+                                    data.getInt(CommonProps.VALUE),
+                                    createSuccessCallback(topTask.getType()),
+                                    createErrorCallback()
+                            );
+                        } else if (data.get(CommonProps.VALUE) instanceof Double) {
+                            networkManager.increaseProperty(
+                                    data.getString(CommonProps.CURRENT_DISTINCT_ID),
+                                    data.getString(CommonProps.PROPERTY_NAME),
+                                    data.getDouble(CommonProps.VALUE),
+                                    createSuccessCallback(topTask.getType()),
+                                    createErrorCallback()
+                            );
+                        }
+
+                    } catch (JSONException e) {
+                        cleanUpProcessingTasks();
+                        finishFlushing();
+                        Logger.error(e);
+                    }
+
+                    break;
+                }
+
+                case TaskType.APPEND_TO_PROPERTY: {
+                    Logger.log("FLUSHING: try to flush appendToProperty task");
+                    topTask.setProcessing(true);
+                    JSONObject data = topTask.getData();
+                    processingQueue.poll();
+                    try {
+                        networkManager.appendToProperty(
+                                data.getString(CommonProps.CURRENT_DISTINCT_ID),
+                                data.getString(CommonProps.PROPERTY_NAME),
+                                data.getJSONArray(CommonProps.VALUE),
+                                createSuccessCallback(topTask.getType()),
+                                createErrorCallback()
+                        );
+                    } catch (JSONException e) {
+                        cleanUpProcessingTasks();
+                        finishFlushing();
+                        Logger.error(e);
+                    }
+
+                    break;
+                }
+
+                case TaskType.REMOVE_FROM_PROPERTY: {
+                    Logger.log("FLUSHING: try to flush removeFromProperty task");
+                    topTask.setProcessing(true);
+                    JSONObject data = topTask.getData();
+                    processingQueue.poll();
+                    try {
+                        networkManager.removeFromProperty(
+                                data.getString(CommonProps.CURRENT_DISTINCT_ID),
+                                data.getString(CommonProps.PROPERTY_NAME),
+                                data.getJSONArray(CommonProps.VALUE),
+                                createSuccessCallback(topTask.getType()),
+                                createErrorCallback()
+                        );
+                    } catch (JSONException e) {
+                        cleanUpProcessingTasks();
+                        finishFlushing();
+                        Logger.error(e);
+                    }
+
                     break;
                 }
             }

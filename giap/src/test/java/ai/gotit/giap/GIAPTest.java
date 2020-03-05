@@ -2,6 +2,7 @@ package ai.gotit.giap;
 
 import android.app.Activity;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
@@ -15,6 +16,9 @@ import org.mockito.junit.MockitoRule;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 import ai.gotit.giap.entity.Event;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
@@ -183,6 +187,36 @@ public class GIAPTest {
         JSONObject mockJSONObject = new JSONObjectMock().getMock();
         giap.updateProfile(mockJSONObject);
         verify(taskManager, times(1)).createUpdateProfileTask(mockJSONObject);
+    }
+
+    @Test
+    public void increaseIntProperty() {
+        giap.increaseProperty("count", 1);
+        verify(taskManager, times(1)).createIncreasePropertyTask("count", 1);
+    }
+
+    @Test
+    public void increaseDoubleProperty() {
+        giap.increaseProperty("count", 0.1);
+        verify(taskManager, times(1)).createIncreasePropertyTask("count", 0.1);
+    }
+
+    @Test
+    public void appendToProperty() {
+        JSONArray tags = new JSONArray();
+        tags.put("red");
+        tags.put("blue");
+        giap.appendToProperty("tags", tags);
+        verify(taskManager, times(1)).createAppendToPropertyTask("tags", tags);
+    }
+
+    @Test
+    public void removeFromProperty() {
+        JSONArray tags = new JSONArray();
+        tags.put("red");
+        tags.put("blue");
+        giap.removeFromProperty("tags", tags);
+        verify(taskManager, times(1)).createRemoveFromPropertyTask("tags", tags);
     }
 
     @Test

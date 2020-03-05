@@ -46,4 +46,32 @@
         android:layout_marginTop="32dp"
         android:text="Log out" />
 
+    <Button
+        android:id="@+id/increase_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Increase" />
+
+    <Button
+        android:id="@+id/decrease_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Decrease" />
+
+    <Button
+        android:id="@+id/add_tags_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Add tags" />
+
+    <Button
+        android:id="@+id/remove_tags_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Remove tags" />
+
 </LinearLayout>

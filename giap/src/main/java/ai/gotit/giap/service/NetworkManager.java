@@ -1,7 +1,9 @@
 package ai.gotit.giap.service;
 
 import android.net.Uri;
+import android.util.Pair;
 
+import ai.gotit.giap.constant.Operation;
 import androidx.annotation.Nullable;
 
 import com.android.volley.Request;
@@ -16,7 +18,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import ai.gotit.giap.constant.CommonProps;
@@ -114,4 +119,41 @@ public class NetworkManager {
         String endpoint = "profiles/" + distinctId;
         request(Request.Method.PUT, endpoint, null, bodyData, callback, errorCallback);
     }
+
+    public <T> void increaseProperty(String userId, String propertyName, T value, Listener<JSONObject> callback, ErrorListener errorCallback) {
+        String endpoint = "profiles/" + userId + "/" + propertyName;
+        JSONObject bodyData = new JSONObject();
+        try {
+            bodyData.put("operation", Operation.INCREASE);
+            bodyData.put("value", value);
+            request(Request.Method.PUT, endpoint, null, bodyData, callback, errorCallback);
+        } catch (JSONException e) {
+            Logger.error(e);
+        }
+    }
+
+    public void appendToProperty(String userId, String propertyName, JSONArray values, Listener<JSONObject> callback, ErrorListener errorCallback) {
+        String endpoint = "profiles/" + userId + "/" + propertyName;
+        JSONObject bodyData = new JSONObject();
+        try {
+            bodyData.put("operation", Operation.APPEND);
+            bodyData.put("value", values);
+            request(Request.Method.PUT, endpoint, null, bodyData, callback, errorCallback);
+        } catch (JSONException e) {
+            Logger.error(e);
+        }
+    }
+
+    public void removeFromProperty(String userId, String propertyName, JSONArray values, Listener<JSONObject> callback, ErrorListener errorCallback) {
+        String endpoint = "profiles/" + userId + "/" + propertyName;
+        JSONObject bodyData = new JSONObject();
+        try {
+            bodyData.put("operation", Operation.REMOVE);
+            bodyData.put("value", values);
+            request(Request.Method.PUT, endpoint, null, bodyData, callback, errorCallback);
+        } catch (JSONException e) {
+            Logger.error(e);
+        }
+    }
+
 }
