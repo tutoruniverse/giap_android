@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -21,6 +22,10 @@ public class MainActivity extends AppCompatActivity {
     private Button askButton;
     private Button setFullNameButton;
     private Button logoutButton;
+    private Button increaseButton;
+    private Button decreaseButton;
+    private Button addTagsButton;
+    private Button removeTagsButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +38,10 @@ public class MainActivity extends AppCompatActivity {
         askButton = findViewById(R.id.ask_button);
         setFullNameButton = findViewById(R.id.set_full_name_button);
         logoutButton = findViewById(R.id.logout_button);
+        increaseButton = findViewById(R.id.increase_button);
+        decreaseButton = findViewById(R.id.decrease_button);
+        addTagsButton = findViewById(R.id.add_tags_button);
+        removeTagsButton = findViewById(R.id.remove_tags_button);
 
         setAuthState(false);
 
@@ -154,6 +163,52 @@ public class MainActivity extends AppCompatActivity {
                 setAuthState(false);
             }
         });
+
+        increaseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                giap.increaseProperty("count", 1);
+            }
+        });
+
+        decreaseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                giap.increaseProperty("count", -1);
+            }
+        });
+
+        addTagsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTagsDialog(new TagsDialogFragment.OnSubmitListener() {
+                    @Override
+                    public void onSubmit(String[] tags) {
+                        JSONArray array = new JSONArray();
+                        for (String tag : tags) {
+                            array.put(tag);
+                        }
+                        giap.appendToProperty("tags", array);
+                    }
+                });
+            }
+        });
+
+        removeTagsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showTagsDialog(new TagsDialogFragment.OnSubmitListener() {
+                    @Override
+                    public void onSubmit(String[] tags) {
+                        JSONArray array = new JSONArray();
+                        for (String tag : tags) {
+                            array.put(tag);
+                        }
+                        giap.removeFromProperty("tags", array);
+                    }
+                });
+            }
+        });
     }
 
     private void setAuthState(boolean loggedIn) {
@@ -164,6 +219,10 @@ public class MainActivity extends AppCompatActivity {
             askButton.setVisibility(Button.VISIBLE);
             setFullNameButton.setVisibility(Button.VISIBLE);
             logoutButton.setVisibility(Button.VISIBLE);
+            increaseButton.setVisibility(Button.VISIBLE);
+            decreaseButton.setVisibility(Button.VISIBLE);
+            addTagsButton.setVisibility(Button.VISIBLE);
+            removeTagsButton.setVisibility(Button.VISIBLE);
         } else {
             loginButton.setVisibility(Button.VISIBLE);
             signUpButton.setVisibility(Button.VISIBLE);
@@ -171,6 +230,10 @@ public class MainActivity extends AppCompatActivity {
             askButton.setVisibility(Button.GONE);
             setFullNameButton.setVisibility(Button.GONE);
             logoutButton.setVisibility(Button.GONE);
+            increaseButton.setVisibility(Button.GONE);
+            decreaseButton.setVisibility(Button.GONE);
+            addTagsButton.setVisibility(Button.GONE);
+            removeTagsButton.setVisibility(Button.GONE);
         }
     }
 
@@ -206,6 +269,12 @@ public class MainActivity extends AppCompatActivity {
         SignUpDialogFragment dialog = new SignUpDialogFragment();
         dialog.setOnSubmitListener(onSubmitListener);
         dialog.show(getSupportFragmentManager(), "sign_up_dialog");
+    }
+
+    private void showTagsDialog(TagsDialogFragment.OnSubmitListener onSubmitListener) {
+        TagsDialogFragment dialog = new TagsDialogFragment();
+        dialog.setOnSubmitListener(onSubmitListener);
+        dialog.show(getSupportFragmentManager(), "tags_dialog");
     }
 
     interface OnSubmitDialogListener {

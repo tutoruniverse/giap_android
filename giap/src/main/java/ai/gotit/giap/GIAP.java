@@ -3,7 +3,13 @@ package ai.gotit.giap;
 import android.app.Activity;
 import android.app.Application;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 import ai.gotit.giap.entity.Event;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
@@ -183,6 +189,35 @@ public class GIAP {
     public void updateProfile(JSONObject props) {
         taskManager.createUpdateProfileTask(props);
     }
+
+    /**
+     * Increase/decrease numeric property
+     * @param propertyName Property Name
+     * @param value Increment/decrement value
+     */
+    public void increaseProperty(String propertyName, int value) {taskManager.createIncreasePropertyTask(propertyName, value);}
+
+    /**
+     * Increase/decrease numeric property
+     * @param propertyName Property Name
+     * @param value Increment/decrement value
+     */
+    public void increaseProperty(String propertyName, double value) {taskManager.createIncreasePropertyTask(propertyName, value);}
+
+    /**
+     * Append new elements to list property
+     * @param propertyName Property Name
+     * @param values New elements
+     */
+    public void appendToProperty(String propertyName, JSONArray values) {taskManager.createAppendToPropertyTask(propertyName, values);}
+
+
+    /**
+     * Remove elements from list property
+     * @param propertyName Property Name
+     * @param values Removed elements
+     */
+    public void removeFromProperty(String propertyName, JSONArray values) {taskManager.createRemoveFromPropertyTask(propertyName, values);}
 
     /**
      * Method to generate new distinctId for new user/visitor after current user take log out action.

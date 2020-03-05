@@ -1,9 +1,12 @@
 package ai.gotit.giap.service;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Collections;
 
 import ai.gotit.giap.constant.TaskType;
 import ai.gotit.giap.entity.Event;
@@ -71,6 +74,36 @@ public class TaskManagerTest {
         taskManager.createUpdateProfileTask(new JSONObject());
         assertEquals(1, taskManager.getTaskQueue().size());
         assertEquals(TaskType.UPDATE_PROFILE, taskManager.getTaskQueue().peek().getType());
+    }
+
+    @Test
+    public void createIncreasePropertyTask() {
+        assertEquals(0, taskManager.getTaskQueue().size());
+        taskManager.createIncreasePropertyTask("count", 1);
+        assertEquals(1, taskManager.getTaskQueue().size());
+        assertEquals(TaskType.INCREASE_PROPERTY, taskManager.getTaskQueue().peek().getType());
+    }
+
+    @Test
+    public void createAppendToPropertyTask() {
+        JSONArray tags = new JSONArray();
+        tags.put("red");
+        tags.put("blue");
+        assertEquals(0, taskManager.getTaskQueue().size());
+        taskManager.createAppendToPropertyTask("tags", tags);
+        assertEquals(1, taskManager.getTaskQueue().size());
+        assertEquals(TaskType.APPEND_TO_PROPERTY, taskManager.getTaskQueue().peek().getType());
+    }
+
+    @Test
+    public void createRemoveFromPropertyTask() {
+        JSONArray tags = new JSONArray();
+        tags.put("red");
+        tags.put("blue");
+        assertEquals(0, taskManager.getTaskQueue().size());
+        taskManager.createRemoveFromPropertyTask("tags", tags);
+        assertEquals(1, taskManager.getTaskQueue().size());
+        assertEquals(TaskType.REMOVE_FROM_PROPERTY, taskManager.getTaskQueue().peek().getType());
     }
 
     @Test
