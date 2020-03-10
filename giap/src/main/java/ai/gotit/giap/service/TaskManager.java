@@ -10,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +35,7 @@ public class TaskManager {
     private Queue<Task> processingQueue = new LinkedList<>();
     private Boolean flushing = false;
     private Boolean started = false;
+    private Boolean shouldNotRestart = false;
     private ScheduledExecutorService scheduler = null;
     private ScheduledFuture<?> scheduledJobHandler = null;
     private Storage storage;
@@ -239,8 +241,18 @@ public class TaskManager {
                     Logger.log("FLUSHING: network error, retry!");
                 } else {
                     int statusCode = e.networkResponse.statusCode;
-                    if (statusCode >= CommonConstant.MIN_SERVER_ERROR_STATUS_CODE && statusCode <= CommonConstant.MAX_SERVER_ERROR_STATUS_CODE
-                    ) {
+                    int detailedStatusCode = -1;
+                    try {
+                        String body = new String(e.networkResponse.data, StandardCharsets.UTF_8);
+                        detailedStatusCode = new JSONObject(body).getInt(CommonProps.ERROR_CODE);
+                    } catch (Exception e1) {
+                        Logger.error(e);
+                    }
+                    if (detailedStatusCode == CommonConstant.DISABLED_TOKEN_STATUS_CODE) {
+                        Logger.error("UNAUTHORIZED: This token is disabled at the moment. Stopping all GIAP's services and ignore all events.");
+                        forceStopPermanently();
+                        return;
+                    } else if (statusCode >= CommonConstant.MIN_SERVER_ERROR_STATUS_CODE && statusCode <= CommonConstant.MAX_SERVER_ERROR_STATUS_CODE) {
                         Logger.log("FLUSHING: GIAP Platform Core internal error!");
                     } else {
                         cleanUpProcessingTasks();
@@ -471,6 +483,7 @@ public class TaskManager {
 
     @VisibleForTesting
     void startScheduling() {
+        if (shouldNotRestart) return;
         if (scheduler == null) {
             Logger.error("TASK MANAGER: scheduler not found (should not be). Can not start scheduling.");
             return;
@@ -489,6 +502,7 @@ public class TaskManager {
     }
 
     public void start() {
+        if (shouldNotRestart) return;
         if (started) {
             Logger.warn("TASK MANAGER: Scheduler has started. Call stop() before starting again.");
             return;
@@ -499,6 +513,7 @@ public class TaskManager {
     }
 
     public void restart() {
+        if (shouldNotRestart) return;
         if (started) {
             Logger.warn("TASK MANAGER: Scheduler has started. Call stop() before starting again.");
             return;
@@ -518,6 +533,17 @@ public class TaskManager {
         }
         storeTasks();
         started = false;
+    }
+
+    synchronized public void forceStopPermanently() {
+        Logger.warn("TASK MANAGER: force stop permanently ...");
+        shouldNotRestart = true;
+        if (scheduledJobHandler != null) {
+            scheduledJobHandler.cancel(true);
+        }
+        finishFlushing();
+        started = false;
+        Logger.warn("TASK MANAGER: Stopped permanently. Ignore incoming tasks.");
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
