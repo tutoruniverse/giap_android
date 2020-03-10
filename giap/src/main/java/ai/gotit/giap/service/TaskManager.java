@@ -90,13 +90,30 @@ public class TaskManager {
                 try {
                     JSONObject serializedTask = array.getJSONObject(i);
                     Task task = new Task(serializedTask);
-                    taskQueue.add(task);
+                    addTask(task);
                 } catch (JSONException e) {
                     Logger.error(e);
                 }
             }
         }
         Logger.log("TASK MANAGER: loading saved tasks completed!");
+    }
+
+    private void addTask(Task task) {
+        while (taskQueue.size() >= CommonConstant.TASK_QUEUE_SIZE_LIMIT) {
+            Logger.warn(
+                    "TASK MANAGER: exceeding task queue limit ("
+                    + CommonConstant.TASK_QUEUE_SIZE_LIMIT + "). "
+                    + "Removing oldest event in the queue ..."
+            );
+            taskQueue.poll();
+        }
+        if (shouldNotRestart) {
+            Logger.warn("TASK MANAGER: Service stopped permanently. Ignore this " + task.getType() + " task.");
+            return;
+        }
+        taskQueue.add(task);
+        Logger.log("TASK MANAGER: added new task to the queue!");
     }
 
     public void createEventTask(Event event) {
@@ -107,7 +124,7 @@ public class TaskManager {
             Logger.error(exception);
             return;
         }
-        taskQueue.add(task);
+        addTask(task);
     }
 
     public void createAliasTask(String userId) {
@@ -121,7 +138,7 @@ public class TaskManager {
             return;
         }
         Task task = new Task(TaskType.ALIAS, json);
-        taskQueue.add(task);
+        addTask(task);
         // TODO: aware of multi-thread -> new events still have chance to use old distinctId
         identityManager.updateDistinctId(userId);
     }
@@ -137,7 +154,7 @@ public class TaskManager {
             return;
         }
         Task task = new Task(TaskType.IDENTIFY, json);
-        taskQueue.add(task);
+        addTask(task);
         // TODO: aware of multi-thread -> new events still have chance to use old distinctId
         identityManager.updateDistinctId(userId);
     }
@@ -151,7 +168,7 @@ public class TaskManager {
             return;
         }
         Task task = new Task(TaskType.UPDATE_PROFILE, props);
-        taskQueue.add(task);
+        addTask(task);
     }
 
     public <T> void createIncreasePropertyTask(String propertyName, T value) {
@@ -166,7 +183,7 @@ public class TaskManager {
         }
 
         Task task = new Task(TaskType.INCREASE_PROPERTY, props);
-        taskQueue.add(task);
+        addTask(task);
     }
 
     public void createAppendToPropertyTask(String propertyName, JSONArray values) {
@@ -181,7 +198,7 @@ public class TaskManager {
         }
 
         Task task = new Task(TaskType.APPEND_TO_PROPERTY, props);
-        taskQueue.add(task);
+        addTask(task);
     }
 
     public void createRemoveFromPropertyTask(String propertyName, JSONArray values) {
@@ -196,7 +213,7 @@ public class TaskManager {
         }
 
         Task task = new Task(TaskType.REMOVE_FROM_PROPERTY, props);
-        taskQueue.add(task);
+        addTask(task);
     }
 
     private List<JSONObject> dequeueEvents() {

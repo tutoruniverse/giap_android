@@ -1,7 +1,6 @@
 package ai.gotit.giap.service;
 
 import android.net.Uri;
-import android.util.Pair;
 
 import ai.gotit.giap.constant.Operation;
 import androidx.annotation.Nullable;
@@ -18,10 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import ai.gotit.giap.constant.CommonProps;
