@@ -6,8 +6,7 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collections;
-
+import ai.gotit.giap.constant.CommonConstant;
 import ai.gotit.giap.constant.TaskType;
 import ai.gotit.giap.entity.Event;
 import ai.gotit.giap.mock.JSONObjectMock;
@@ -50,6 +49,21 @@ public class TaskManagerTest {
         assertEquals(1, taskManager.getTaskQueue().size());
         assertSame(serialized, taskManager.getTaskQueue().peek().getData());
         assertEquals(TaskType.EVENT, taskManager.getTaskQueue().peek().getType());
+    }
+
+    @Test
+    public void queueLimit() {
+        Event event = mock(Event.class);
+        JSONObject serialized = new JSONObjectMock().getMock();
+        try {
+            when(event.serialize()).thenReturn(serialized);
+        } catch (JSONException e) {
+            fail();
+        }
+        for (int i = 1; i < CommonConstant.TASK_QUEUE_SIZE_LIMIT + 100; i++) {
+            taskManager.createEventTask(event);
+        }
+        assertEquals(CommonConstant.TASK_QUEUE_SIZE_LIMIT, taskManager.getTaskQueue().size());
     }
 
     @Test
