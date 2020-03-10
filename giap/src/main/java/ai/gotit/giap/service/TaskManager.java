@@ -265,7 +265,7 @@ public class TaskManager {
                     } catch (Exception e1) {
                         Logger.error(e);
                     }
-                    if (detailedStatusCode == CommonConstant.DISABLED_TOKEN_STATUS_CODE) {
+                    if (detailedStatusCode == CommonConstant.DISABLED_TOKEN_ERROR_CODE) {
                         Logger.error("UNAUTHORIZED: This token is disabled at the moment. Stopping all GIAP's services and ignore all events.");
                         forceStopPermanently();
                         return;
