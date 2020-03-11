@@ -1,5 +1,6 @@
 package ai.gotit.giap.service;
 
+import ai.gotit.giap.BuildConfig;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.volley.NoConnectionError;
@@ -90,7 +91,12 @@ public class TaskManager {
                 try {
                     JSONObject serializedTask = array.getJSONObject(i);
                     Task task = new Task(serializedTask);
-                    addTask(task);
+                    // Only accept tasks from current SDK version
+                    if (BuildConfig.VERSION_NAME.equals(task.getSdkVersion())) {
+                        addTask(task);
+                    } else {
+                        Logger.log("TASK MANAGER: ignore task from old SDK version ...");
+                    }
                 } catch (JSONException e) {
                     Logger.error(e);
                 }
