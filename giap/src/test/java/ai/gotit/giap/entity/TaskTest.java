@@ -4,6 +4,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import ai.gotit.giap.BuildConfig;
 import ai.gotit.giap.constant.TaskProps;
 import ai.gotit.giap.constant.TaskType;
 
@@ -16,6 +17,7 @@ public class TaskTest {
     public void constructor() {
         Task noDataTask = new Task(TaskType.EVENT);
         assertEquals(TaskType.EVENT, noDataTask.getType());
+        assertEquals(BuildConfig.VERSION_NAME, noDataTask.getSdkVersion());
         assertNull(noDataTask.getData());
 
         JSONObject data = mock(JSONObject.class);
@@ -40,6 +42,12 @@ public class TaskTest {
     public void getType() {
         Task task = new Task(TaskType.EVENT);
         assertEquals(TaskType.EVENT, task.getType());
+    }
+
+    @Test
+    public void getSdkVersion() {
+        Task task = new Task(TaskType.EVENT);
+        assertEquals(BuildConfig.VERSION_NAME, task.getSdkVersion());
     }
 
     @Test

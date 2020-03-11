@@ -21,8 +21,6 @@ public class EventTest {
         }
         event.updateTimestamp();
         Long newTime = event.getTime();
-        System.out.println(oldTime);
-        System.out.println(newTime);
         assertTrue(newTime > oldTime);
     }
 
