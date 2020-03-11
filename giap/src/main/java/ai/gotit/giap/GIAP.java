@@ -2,6 +2,7 @@ package ai.gotit.giap;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -71,7 +72,7 @@ public class GIAP {
     public GIAP() {
     }
 
-    private GIAP(String serverUrl, String token, Activity context) {
+    private GIAP(String serverUrl, String token, Context context) {
         exceptionHandler = ExceptionHandler.makeInstance(GIAP.this);
         configManager = ConfigManager.makeInstance(context, serverUrl, token);
         storage = Storage.makeInstance(configManager);
@@ -105,7 +106,7 @@ public class GIAP {
         throw new GIAPInstanceExistsException();
     }
 
-    private void registerGIAPActivityLifecycleCallbacks(Activity context) {
+    private void registerGIAPActivityLifecycleCallbacks(Context context) {
         if (context.getApplicationContext() instanceof Application) {
             final Application app = (Application) context.getApplicationContext();
             GIAPActivityLifecycleCallbacks callbacks = new GIAPActivityLifecycleCallbacks(GIAP.this);

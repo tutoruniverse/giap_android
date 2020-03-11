@@ -1,6 +1,5 @@
 package ai.gotit.giap.service;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -13,7 +12,7 @@ public class Storage {
     public Storage(ConfigManager configManager) {
         // We use token in storage's name to prevent different projects using others's data
         String token = configManager.getToken();
-        Activity context = configManager.getContext();
+        Context context = configManager.getContext();
         String sharedPreferencesName = CommonConstant.SHARED_PREFERENCES_PREFIX + token;
         pref = context.getSharedPreferences(sharedPreferencesName, Context.MODE_PRIVATE);
     }
