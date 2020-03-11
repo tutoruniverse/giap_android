@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
     private Button loginButton;
     private Button signUpButton;
     private Button visitButton;
+    private Button testButton;
     private Button askButton;
     private Button setFullNameButton;
     private Button logoutButton;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
         loginButton = findViewById(R.id.login_button);
         signUpButton = findViewById(R.id.sign_up_button);
         visitButton = findViewById(R.id.visit_button);
+        testButton = findViewById(R.id.test_button);
         askButton = findViewById(R.id.ask_button);
         setFullNameButton = findViewById(R.id.set_full_name_button);
         logoutButton = findViewById(R.id.logout_button);
@@ -104,12 +106,26 @@ public class MainActivity extends AppCompatActivity {
                             JSONObject props = new JSONObject();
                             props.put("economy_group", Integer.parseInt(text, 10));
                             giap.track("Visit", props);
-
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                     }
                 });
+            }
+        });
+
+        testButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for (int i = 1; i < 31; i++) {
+                    try {
+                        JSONObject props = new JSONObject();
+                        props.put("index", i);
+                        giap.track("Test event", props);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         });
 
@@ -216,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
             loginButton.setVisibility(Button.GONE);
             signUpButton.setVisibility(Button.GONE);
             visitButton.setVisibility(Button.GONE);
+            testButton.setVisibility(Button.GONE);
             askButton.setVisibility(Button.VISIBLE);
             setFullNameButton.setVisibility(Button.VISIBLE);
             logoutButton.setVisibility(Button.VISIBLE);
@@ -227,6 +244,7 @@ public class MainActivity extends AppCompatActivity {
             loginButton.setVisibility(Button.VISIBLE);
             signUpButton.setVisibility(Button.VISIBLE);
             visitButton.setVisibility(Button.VISIBLE);
+            testButton.setVisibility(Button.VISIBLE);
             askButton.setVisibility(Button.GONE);
             setFullNameButton.setVisibility(Button.GONE);
             logoutButton.setVisibility(Button.GONE);
