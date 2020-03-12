@@ -31,7 +31,10 @@ public class Event implements Serializable {
                 Iterator<String> customPropsKeys = customProps.keys();
                 while (customPropsKeys.hasNext()) {
                     String key = customPropsKeys.next();
-                    Object value = customProps.get(key);
+                    Object value = null;
+                    if (!customProps.isNull(key)) {
+                        value = customProps.get(key);
+                    }
                     addCustomProp(key, value);
                 }
                 this.customProps = customProps;
@@ -67,7 +70,10 @@ public class Event implements Serializable {
             Iterator<String> deviceInfoKeys = deviceInfo.keys();
             while (deviceInfoKeys.hasNext()) {
                 String key = deviceInfoKeys.next();
-                Object value = deviceInfo.get(key);
+                Object value = null;
+                if (!deviceInfo.isNull(key)) {
+                    value = deviceInfo.get(key);
+                }
                 json.put(key, value);
             }
         }
@@ -77,7 +83,10 @@ public class Event implements Serializable {
             Iterator<String> customPropsKeys = customProps.keys();
             while (customPropsKeys.hasNext()) {
                 String key = customPropsKeys.next();
-                Object value = customProps.get(key);
+                Object value = null;
+                if (!customProps.isNull(key)) {
+                    value = customProps.get(key);
+                }
                 json.put(key, value);
             }
         }
