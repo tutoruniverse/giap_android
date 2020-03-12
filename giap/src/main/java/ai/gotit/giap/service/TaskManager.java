@@ -266,7 +266,7 @@ public class TaskManager {
                     int statusCode = e.networkResponse.statusCode;
                     int detailedStatusCode = -1;
                     try {
-                        String body = new String(e.networkResponse.data, StandardCharsets.UTF_8);
+                        String body = new String(e.networkResponse.data, "UTF-8");
                         detailedStatusCode = new JSONObject(body).getInt(CommonProps.ERROR_CODE);
                     } catch (Exception e1) {
                         Logger.error(e);

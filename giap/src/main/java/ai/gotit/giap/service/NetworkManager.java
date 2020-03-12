@@ -1,5 +1,6 @@
 package ai.gotit.giap.service;
 
+import android.content.Context;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -16,16 +17,19 @@ import com.android.volley.Response.Listener;
 import com.android.volley.toolbox.BaseHttpStack;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.security.ProviderInstaller;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+
+import javax.net.ssl.SSLContext;
 
 import ai.gotit.giap.constant.CommonProps;
 import ai.gotit.giap.util.Logger;
@@ -52,7 +56,24 @@ public class NetworkManager {
         return new NetworkManager(configManager);
     }
 
+    private void initializeSSLContext(){
+        try {
+            SSLContext.getInstance("TLSv1.2");
+        } catch (NoSuchAlgorithmException e) {
+            Logger.error(e);
+        }
+        try {
+            Context context = configManager.getContext().getApplicationContext();
+            ProviderInstaller.installIfNeeded(context.getApplicationContext());
+        } catch (GooglePlayServicesRepairableException e) {
+            Logger.error(e);
+        } catch (GooglePlayServicesNotAvailableException e) {
+            Logger.error(e);
+        }
+    }
+
     /* package */ void request(final int method, String endpoint, Map<String, String> params, @Nullable JSONObject body, Listener<JSONObject> callback, ErrorListener errorCallback) {
+        initializeSSLContext();
         Uri.Builder builder = new Uri.Builder();
         String serverUrl = configManager.getServerUrl();
         if (!serverUrl.startsWith("http")) {
