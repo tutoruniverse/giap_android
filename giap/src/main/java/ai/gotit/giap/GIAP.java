@@ -1,15 +1,10 @@
 package ai.gotit.giap;
 
-import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 
 import ai.gotit.giap.entity.Event;
 import ai.gotit.giap.exception.GIAPInstanceExistsException;
@@ -26,11 +21,11 @@ import ai.gotit.giap.util.Logger;
 /**
  * Main class of GIAP Android SDK.
  *
- * <p>Call {@link #initialize(String, String, Activity)} first to initialize GIAP and its
+ * <p>Call {@link #initialize(String, String, Context)} first to initialize GIAP and its
  * sub-services.</p>
  *
  * <p>Then call {@link #getInstance()} to get singleton instance. CAUTION: getInstance can return
- * null if {@link #initialize(String, String, Activity)} is not called first.</p>
+ * null if {@link #initialize(String, String, Context)} is not called first.</p>
  *
  * <p>Call {@link #track(String, JSONObject)} to emit your event to the system:</p>
  * <pre>
@@ -71,7 +66,7 @@ public class GIAP {
     public GIAP() {
     }
 
-    private GIAP(String serverUrl, String token, Activity context) {
+    private GIAP(String serverUrl, String token, Context context) {
         exceptionHandler = ExceptionHandler.makeInstance(GIAP.this);
         configManager = ConfigManager.makeInstance(context, serverUrl, token);
         storage = Storage.makeInstance(configManager);
@@ -93,7 +88,7 @@ public class GIAP {
      * @param context   Application's context that you want to track
      * @return Instance of GIAP
      */
-    public static GIAP initialize(String serverUrl, String token, Activity context) {
+    public static GIAP initialize(String serverUrl, String token, Context context) {
         if (instance == null) {
             synchronized (GIAP.class) {
                 if (instance == null) {
@@ -105,7 +100,7 @@ public class GIAP {
         throw new GIAPInstanceExistsException();
     }
 
-    private void registerGIAPActivityLifecycleCallbacks(Activity context) {
+    private void registerGIAPActivityLifecycleCallbacks(Context context) {
         if (context.getApplicationContext() instanceof Application) {
             final Application app = (Application) context.getApplicationContext();
             GIAPActivityLifecycleCallbacks callbacks = new GIAPActivityLifecycleCallbacks(GIAP.this);

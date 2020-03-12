@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
@@ -40,7 +41,7 @@ public class DeviceInfoManager {
         this.configManager = configManager;
         this.storage = storage;
 
-        Activity context = configManager.getContext();
+        Context context = configManager.getContext();
         PackageManager packageManager = context.getPackageManager();
 
         // Get version's info
@@ -70,7 +71,9 @@ public class DeviceInfoManager {
             try {
                 foundNFC = (Boolean) hasSystemFeatureMethod.invoke(packageManager, "android.hardware.nfc");
                 foundTelephony = (Boolean) hasSystemFeatureMethod.invoke(packageManager, "android.hardware.telephony");
-            } catch (InvocationTargetException | IllegalAccessException e) {
+            } catch (InvocationTargetException e) {
+                Logger.warn("System version appeared to support PackageManager.hasSystemFeature, but we were unable to call it.");
+            } catch (IllegalAccessException e) {
                 Logger.warn("System version appeared to support PackageManager.hasSystemFeature, but we were unable to call it.");
             }
         }
@@ -135,13 +138,10 @@ public class DeviceInfoManager {
     }
 
     private DisplayMetrics getScreenMetrics() {
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        configManager
+        return configManager
                 .getContext()
-                .getWindowManager()
-                .getDefaultDisplay()
-                .getMetrics(displayMetrics);
-        return displayMetrics;
+                .getResources()
+                .getDisplayMetrics();
     }
 
     private String getCarrier() {
@@ -206,24 +206,37 @@ public class DeviceInfoManager {
     @SuppressLint("MissingPermission")
     @SuppressWarnings("MissingPermission")
     private Boolean isWifiConnected() {
-        Activity context = configManager.getContext();
-        Boolean wifiConnected = null;
+        Context context = configManager.getContext();
+
         if (PackageManager.PERMISSION_GRANTED == context.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
-            ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
-            wifiConnected = (
-                    networkInfo != null
-                            && networkInfo.getType() == ConnectivityManager.TYPE_WIFI
-                            && networkInfo.isConnected()
-            );
+            return null;
         }
-        return wifiConnected;
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (connectivityManager == null) {
+            return null;
+        }
+
+        if  (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.getActiveNetwork());
+            if (capabilities != null) {
+                return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+            }
+
+            return null;
+        } else {
+            NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+            return networkInfo != null
+                            && networkInfo.getType() == ConnectivityManager.TYPE_WIFI
+                            && networkInfo.isConnected();
+        }
     }
 
     @SuppressLint("MissingPermission")
     @SuppressWarnings("MissingPermission")
     private Boolean isBluetoothEnabled() {
-        Activity context = configManager.getContext();
+        Context context = configManager.getContext();
         Boolean isBluetoothEnabled = null;
         try {
             PackageManager pm = context.getPackageManager();

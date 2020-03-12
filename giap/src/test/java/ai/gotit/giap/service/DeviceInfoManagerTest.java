@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.telephony.TelephonyManager;
@@ -39,7 +40,7 @@ public class DeviceInfoManagerTest {
 
     @Before
     public void setUp() throws Exception {
-        Activity context = mock(Activity.class);
+        Context context = mock(Context.class);
 
         // Mock package info
         PackageManager packageManager = mock(PackageManager.class);
@@ -51,21 +52,13 @@ public class DeviceInfoManagerTest {
         when(context.getPackageName()).thenReturn("giap");
 
         // Mock display info
-        WindowManager windowManager = mock(WindowManager.class);
-        Display display = mock(Display.class);
-        when(context.getWindowManager()).thenReturn(windowManager);
-        when(windowManager.getDefaultDisplay()).thenReturn(display);
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                DisplayMetrics displayMetrics = ((DisplayMetrics) args[0]);
-                displayMetrics.heightPixels = 200;
-                displayMetrics.widthPixels = 100;
-                displayMetrics.densityDpi = 2;
-                return null;
-            }
-        }).when(display).getMetrics(any(DisplayMetrics.class));
+        Resources resources = mock(Resources.class);
+        DisplayMetrics displayMetrics = mock(DisplayMetrics.class);
+        displayMetrics.heightPixels = 200;
+        displayMetrics.widthPixels = 100;
+        displayMetrics.densityDpi = 2;
+        when(context.getResources()).thenReturn(resources);
+        when(resources.getDisplayMetrics()).thenReturn(displayMetrics);
 
         // Mock WIFI
         ConnectivityManager connManager = mock(ConnectivityManager.class);
