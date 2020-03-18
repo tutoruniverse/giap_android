@@ -207,7 +207,7 @@ public class DeviceInfoManager {
     private Boolean isWifiConnected() {
         Context context = configManager.getContext();
 
-        if (PackageManager.PERMISSION_GRANTED == context.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
+        if (PackageManager.PERMISSION_GRANTED != context.checkCallingOrSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE)) {
             return null;
         }
 
