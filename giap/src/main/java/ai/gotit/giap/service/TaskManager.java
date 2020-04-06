@@ -260,7 +260,7 @@ public class TaskManager {
             @Override
             public void onErrorResponse(VolleyError e) {
                 Logger.error(e);
-                if (e instanceof NoConnectionError) {
+                if (e instanceof NoConnectionError || e.networkResponse == null) {
                     Logger.log("FLUSHING: network error, retry!");
                 } else {
                     int statusCode = e.networkResponse.statusCode;
